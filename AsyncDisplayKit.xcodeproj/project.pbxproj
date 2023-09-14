@@ -121,12 +121,29 @@
 		05A6D05A19D0EB64002DD95E /* ASDealloc2MainObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 05A6D05819D0EB64002DD95E /* ASDealloc2MainObject.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		05A6D05B19D0EB64002DD95E /* ASDealloc2MainObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 05A6D05919D0EB64002DD95E /* ASDealloc2MainObject.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		3C9C128519E616EF00E942A0 /* ASTableViewTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C9C128419E616EF00E942A0 /* ASTableViewTests.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		3F3B2ADB2AB34C7F00FB58BD /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F3B2ADA2AB34C7F00FB58BD /* AppDelegate.m */; };
+		3F3B2ADE2AB34C7F00FB58BD /* SceneDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F3B2ADD2AB34C7F00FB58BD /* SceneDelegate.m */; };
+		3F3B2AE12AB34C7F00FB58BD /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F3B2AE02AB34C7F00FB58BD /* ViewController.m */; };
+		3F3B2AE42AB34C7F00FB58BD /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3F3B2AE22AB34C7F00FB58BD /* Main.storyboard */; };
+		3F3B2AE62AB34C8100FB58BD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3F3B2AE52AB34C8100FB58BD /* Assets.xcassets */; };
+		3F3B2AE92AB34C8100FB58BD /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3F3B2AE72AB34C8100FB58BD /* LaunchScreen.storyboard */; };
+		3F3B2AEC2AB34C8100FB58BD /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F3B2AEB2AB34C8100FB58BD /* main.m */; };
+		3F3B2AF22AB34CCD00FB58BD /* libAsyncDisplayKit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 058D09AC195D04C000B7D73C /* libAsyncDisplayKit.a */; };
+		3F3B2AF72AB3505B00FB58BD /* BlurbNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F3B2AF32AB3505B00FB58BD /* BlurbNode.m */; };
+		3F3B2AF82AB3505B00FB58BD /* KittenNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F3B2AF62AB3505B00FB58BD /* KittenNode.m */; };
 		6BDC61F61979037800E50D21 /* AsyncDisplayKit.h in Headers */ = {isa = PBXBuildFile; fileRef = 6BDC61F51978FEA400E50D21 /* AsyncDisplayKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DB7121BCD50849C498C886FB /* libPods-AsyncDisplayKitTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EFA731F0396842FF8AB635EE /* libPods-AsyncDisplayKitTests.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
 		058D09C2195D04C000B7D73C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 058D09A4195D04C000B7D73C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 058D09AB195D04C000B7D73C;
+			remoteInfo = AsyncDisplayKit;
+		};
+		3F3B2AF02AB34CC700FB58BD /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 058D09A4195D04C000B7D73C /* Project object */;
 			proxyType = 1;
@@ -240,6 +257,22 @@
 		05A6D05819D0EB64002DD95E /* ASDealloc2MainObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ASDealloc2MainObject.h; path = ../Details/ASDealloc2MainObject.h; sourceTree = "<group>"; };
 		05A6D05919D0EB64002DD95E /* ASDealloc2MainObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ASDealloc2MainObject.m; path = ../Details/ASDealloc2MainObject.m; sourceTree = "<group>"; };
 		3C9C128419E616EF00E942A0 /* ASTableViewTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ASTableViewTests.m; sourceTree = "<group>"; };
+		3F3B2AD72AB34C7F00FB58BD /* AsyncDisplayKitTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AsyncDisplayKitTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3F3B2AD92AB34C7F00FB58BD /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		3F3B2ADA2AB34C7F00FB58BD /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		3F3B2ADC2AB34C7F00FB58BD /* SceneDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SceneDelegate.h; sourceTree = "<group>"; };
+		3F3B2ADD2AB34C7F00FB58BD /* SceneDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SceneDelegate.m; sourceTree = "<group>"; };
+		3F3B2ADF2AB34C7F00FB58BD /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		3F3B2AE02AB34C7F00FB58BD /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		3F3B2AE32AB34C7F00FB58BD /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		3F3B2AE52AB34C8100FB58BD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		3F3B2AE82AB34C8100FB58BD /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		3F3B2AEA2AB34C8100FB58BD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		3F3B2AEB2AB34C8100FB58BD /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		3F3B2AF32AB3505B00FB58BD /* BlurbNode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BlurbNode.m; path = examples/Kittens/Sample/BlurbNode.m; sourceTree = SOURCE_ROOT; };
+		3F3B2AF42AB3505B00FB58BD /* KittenNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KittenNode.h; path = examples/Kittens/Sample/KittenNode.h; sourceTree = SOURCE_ROOT; };
+		3F3B2AF52AB3505B00FB58BD /* BlurbNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BlurbNode.h; path = examples/Kittens/Sample/BlurbNode.h; sourceTree = SOURCE_ROOT; };
+		3F3B2AF62AB3505B00FB58BD /* KittenNode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = KittenNode.m; path = examples/Kittens/Sample/KittenNode.m; sourceTree = SOURCE_ROOT; };
 		6BDC61F51978FEA400E50D21 /* AsyncDisplayKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AsyncDisplayKit.h; sourceTree = "<group>"; };
 		EFA731F0396842FF8AB635EE /* libPods-AsyncDisplayKitTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AsyncDisplayKitTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FAD7085290B84183BD13BA1A /* Pods-AsyncDisplayKitTests.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AsyncDisplayKitTests.xcconfig"; path = "Pods/Pods-AsyncDisplayKitTests.xcconfig"; sourceTree = "<group>"; };
@@ -266,6 +299,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		3F3B2AD42AB34C7F00FB58BD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3F3B2AF22AB34CCD00FB58BD /* libAsyncDisplayKit.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -274,6 +315,7 @@
 			children = (
 				058D09B1195D04C000B7D73C /* AsyncDisplayKit */,
 				058D09C5195D04C000B7D73C /* AsyncDisplayKitTests */,
+				3F3B2AD82AB34C7F00FB58BD /* AsyncDisplayKitTest */,
 				058D09AE195D04C000B7D73C /* Frameworks */,
 				058D09AD195D04C000B7D73C /* Products */,
 				FAD7085290B84183BD13BA1A /* Pods-AsyncDisplayKitTests.xcconfig */,
@@ -285,6 +327,7 @@
 			children = (
 				058D09AC195D04C000B7D73C /* libAsyncDisplayKit.a */,
 				058D09BC195D04C000B7D73C /* AsyncDisplayKitTests.xctest */,
+				3F3B2AD72AB34C7F00FB58BD /* AsyncDisplayKitTest.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -450,6 +493,28 @@
 			path = Base;
 			sourceTree = SOURCE_ROOT;
 		};
+		3F3B2AD82AB34C7F00FB58BD /* AsyncDisplayKitTest */ = {
+			isa = PBXGroup;
+			children = (
+				3F3B2AD92AB34C7F00FB58BD /* AppDelegate.h */,
+				3F3B2ADA2AB34C7F00FB58BD /* AppDelegate.m */,
+				3F3B2ADC2AB34C7F00FB58BD /* SceneDelegate.h */,
+				3F3B2ADD2AB34C7F00FB58BD /* SceneDelegate.m */,
+				3F3B2ADF2AB34C7F00FB58BD /* ViewController.h */,
+				3F3B2AE02AB34C7F00FB58BD /* ViewController.m */,
+				3F3B2AF52AB3505B00FB58BD /* BlurbNode.h */,
+				3F3B2AF32AB3505B00FB58BD /* BlurbNode.m */,
+				3F3B2AF42AB3505B00FB58BD /* KittenNode.h */,
+				3F3B2AF62AB3505B00FB58BD /* KittenNode.m */,
+				3F3B2AE22AB34C7F00FB58BD /* Main.storyboard */,
+				3F3B2AE52AB34C8100FB58BD /* Assets.xcassets */,
+				3F3B2AE72AB34C8100FB58BD /* LaunchScreen.storyboard */,
+				3F3B2AEA2AB34C8100FB58BD /* Info.plist */,
+				3F3B2AEB2AB34C8100FB58BD /* main.m */,
+			);
+			path = AsyncDisplayKitTest;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -569,6 +634,24 @@
 			productReference = 058D09BC195D04C000B7D73C /* AsyncDisplayKitTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		3F3B2AD62AB34C7F00FB58BD /* AsyncDisplayKitTest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3F3B2AED2AB34C8100FB58BD /* Build configuration list for PBXNativeTarget "AsyncDisplayKitTest" */;
+			buildPhases = (
+				3F3B2AD32AB34C7F00FB58BD /* Sources */,
+				3F3B2AD42AB34C7F00FB58BD /* Frameworks */,
+				3F3B2AD52AB34C7F00FB58BD /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3F3B2AF12AB34CC700FB58BD /* PBXTargetDependency */,
+			);
+			name = AsyncDisplayKitTest;
+			productName = AsyncDisplayKitTest;
+			productReference = 3F3B2AD72AB34C7F00FB58BD /* AsyncDisplayKitTest.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -578,6 +661,11 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1500;
 				ORGANIZATIONNAME = Facebook;
+				TargetAttributes = {
+					3F3B2AD62AB34C7F00FB58BD = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
 			};
 			buildConfigurationList = 058D09A7195D04C000B7D73C /* Build configuration list for PBXProject "AsyncDisplayKit" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -594,6 +682,7 @@
 			targets = (
 				058D09AB195D04C000B7D73C /* AsyncDisplayKit */,
 				058D09BB195D04C000B7D73C /* AsyncDisplayKitTests */,
+				3F3B2AD62AB34C7F00FB58BD /* AsyncDisplayKitTest */,
 			);
 		};
 /* End PBXProject section */
@@ -604,6 +693,16 @@
 			buildActionMask = 2147483647;
 			files = (
 				058D09CA195D04C000B7D73C /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3F3B2AD52AB34C7F00FB58BD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3F3B2AE92AB34C8100FB58BD /* LaunchScreen.storyboard in Resources */,
+				3F3B2AE62AB34C8100FB58BD /* Assets.xcassets in Resources */,
+				3F3B2AE42AB34C7F00FB58BD /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -698,6 +797,19 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		3F3B2AD32AB34C7F00FB58BD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3F3B2AE12AB34C7F00FB58BD /* ViewController.m in Sources */,
+				3F3B2ADB2AB34C7F00FB58BD /* AppDelegate.m in Sources */,
+				3F3B2AF72AB3505B00FB58BD /* BlurbNode.m in Sources */,
+				3F3B2AEC2AB34C8100FB58BD /* main.m in Sources */,
+				3F3B2AF82AB3505B00FB58BD /* KittenNode.m in Sources */,
+				3F3B2ADE2AB34C7F00FB58BD /* SceneDelegate.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -705,6 +817,11 @@
 			isa = PBXTargetDependency;
 			target = 058D09AB195D04C000B7D73C /* AsyncDisplayKit */;
 			targetProxy = 058D09C2195D04C000B7D73C /* PBXContainerItemProxy */;
+		};
+		3F3B2AF12AB34CC700FB58BD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 058D09AB195D04C000B7D73C /* AsyncDisplayKit */;
+			targetProxy = 3F3B2AF02AB34CC700FB58BD /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -715,6 +832,22 @@
 				058D09C9195D04C000B7D73C /* en */,
 			);
 			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		3F3B2AE22AB34C7F00FB58BD /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				3F3B2AE32AB34C7F00FB58BD /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		3F3B2AE72AB34C8100FB58BD /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				3F3B2AE82AB34C8100FB58BD /* Base */,
+			);
+			name = LaunchScreen.storyboard;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -883,6 +1016,95 @@
 			};
 			name = Release;
 		};
+		3F3B2AEE2AB34C8100FB58BD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 86JSFRSCH9;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AsyncDisplayKitTest/Info.plist;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				OTHER_LDFLAGS = (
+					"-lc++",
+					"-ObjC",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.jayying.AsyncDisplayKitTest;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		3F3B2AEF2AB34C8100FB58BD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 86JSFRSCH9;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AsyncDisplayKitTest/Info.plist;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				OTHER_LDFLAGS = (
+					"-lc++",
+					"-ObjC",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.jayying.AsyncDisplayKitTest;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -909,6 +1131,15 @@
 			buildConfigurations = (
 				058D09D3195D04C000B7D73C /* Debug */,
 				058D09D4195D04C000B7D73C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3F3B2AED2AB34C8100FB58BD /* Build configuration list for PBXNativeTarget "AsyncDisplayKitTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3F3B2AEE2AB34C8100FB58BD /* Debug */,
+				3F3B2AEF2AB34C8100FB58BD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
