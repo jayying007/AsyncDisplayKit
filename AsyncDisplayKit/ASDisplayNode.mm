@@ -18,7 +18,7 @@
 #import "_ASScopeTimer.h"
 #import "ASDisplayNodeExtras.h"
 
-@interface ASDisplayNode () <UIGestureRecognizerDelegate>
+@interface ASDisplayNode () <UIGestureRecognizerDelegate, CALayerDelegate>
 
 /**
  *

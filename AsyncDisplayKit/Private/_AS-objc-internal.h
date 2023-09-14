@@ -103,7 +103,7 @@ OBJC_EXPORT id objc_assign_ivar_generic(id value, id dest, ptrdiff_t offset)
     UNAVAILABLE_ATTRIBUTE;
 
 // Install missing-class callback. Used by the late unlamented ZeroLink.
-OBJC_EXPORT void _objc_setClassLoader(BOOL (*newClassLoader)(const char *))  OBJC2_UNAVAILABLE;
+OBJC_EXPORT void _objc_setClassLoader(BOOL (*newClassLoader)(const char *));
 
 // Install handler for allocation failures. 
 // Handler may abort, or throw, or provide an object to return.
