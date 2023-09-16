@@ -9,17 +9,17 @@
 #import <AsyncDisplayKit/ASControlNode.h>
 
 typedef NS_ENUM(NSUInteger, ASImageNodeTint) {
-  ASImageNodeTintNormal = 0,
-  ASImageNodeTintGreyscale,
+    ASImageNodeTintNormal = 0,
+    ASImageNodeTintGreyscale,
 };
 
-typedef UIImage *(^asimagenode_modification_block_t)(UIImage *);
+typedef UIImage * (^asimagenode_modification_block_t)(UIImage *);
 
 // FIXME: This class should not derive from ASControlNode once ASButtonNode is implemented.
 @interface ASImageNode : ASControlNode
 
 @property (atomic, retain) UIImage *image; // The node will efficiently display stretchable images by using the layer's contentsCenter property.
-                                              // Non-stretchable images work too, of course.
+// Non-stretchable images work too, of course.
 
 // This is a simple API if you want to tint the image
 @property (nonatomic, assign) ASImageNodeTint tint;
@@ -53,7 +53,6 @@ typedef UIImage *(^asimagenode_modification_block_t)(UIImage *);
 /**
  @abstract Marks the receiver as needing display and performs a block after display has finished.
  @param displayCompletionBlock The block to be performed after display has finished.
- @param canceled YES if display was prevented or canceled (via preventOrCancelDisplay); NO otherwise.
  @discussion displayCompletionBlock will be performed on the main-thread. If `preventOrCancelDisplay` is YES, `displayCompletionBlock` is will be performed immediately and `YES` will be passed for `canceled`.
  */
 - (void)setNeedsDisplayWithCompletion:(void (^)(BOOL canceled))displayCompletionBlock;

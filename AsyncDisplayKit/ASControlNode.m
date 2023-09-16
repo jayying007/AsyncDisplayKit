@@ -18,19 +18,18 @@
 #define kASControlNodeEventDispatchTableInitialCapacity 4
 #define kASControlNodeActionDispatchTableInitialCapacity 4
 
-@interface ASControlNode ()
-{
+@interface ASControlNode () {
 @private
-  // Control Attributes
-  BOOL _enabled;
-  BOOL _highlighted;
+    // Control Attributes
+    BOOL _enabled;
+    BOOL _highlighted;
 
-  // Tracking
-  BOOL _tracking;
-  BOOL _touchInside;
+    // Tracking
+    BOOL _tracking;
+    BOOL _touchInside;
 
-  // Target Messages.
-  /*
+    // Target Messages.
+    /*
      The table structure is as follows:
 
    {
@@ -42,7 +41,7 @@
     ...
    }
    */
-  NSMutableDictionary *_controlEventDispatchTable;
+    NSMutableDictionary *_controlEventDispatchTable;
 }
 
 // Read-write overrides.
@@ -74,324 +73,287 @@ void _ASEnumerateControlEventsIncludedInMaskWithBlock(ASControlNodeEvent mask, v
 @implementation ASControlNode
 
 #pragma mark - Lifecycle
-- (id)init
-{
-  if (!(self = [super init]))
-    return nil;
+- (id)init {
+    if (!(self = [super init]))
+        return nil;
 
-  _controlEventDispatchTable = [[NSMutableDictionary alloc] initWithCapacity:kASControlNodeEventDispatchTableInitialCapacity]; // enough to handle common types without re-hashing the dictionary when adding entries.
-  _enabled = YES;
+    _controlEventDispatchTable = [[NSMutableDictionary alloc]
+    initWithCapacity:
+    kASControlNodeEventDispatchTableInitialCapacity]; // enough to handle common types without re-hashing the dictionary when adding entries.
+    _enabled = YES;
 
-  // As we have no targets yet, we start off with user interaction off. When a target is added, it'll get turned back on.
-  self.userInteractionEnabled = NO;
-  return self;
+    // As we have no targets yet, we start off with user interaction off. When a target is added, it'll get turned back on.
+    self.userInteractionEnabled = NO;
+    return self;
 }
 
 #pragma mark - ASDisplayNode Overrides
-- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
-{
-  // If we're not interested in touches, we have nothing to do.
-  if (![self _isInterestedInTouches])
-    return;
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+    // If we're not interested in touches, we have nothing to do.
+    if (![self _isInterestedInTouches])
+        return;
 
-  ASControlNodeEvent controlEventMask = 0;
+    ASControlNodeEvent controlEventMask = 0;
 
-  // If we get more than one touch down on us, cancel.
-  // Additionally, if we're already tracking a touch, a second touch beginning is cause for cancellation.
-  if ([touches count] > 1 || self.tracking)
-  {
+    // If we get more than one touch down on us, cancel.
+    // Additionally, if we're already tracking a touch, a second touch beginning is cause for cancellation.
+    if ([touches count] > 1 || self.tracking) {
+        self.tracking = NO;
+        self.touchInside = NO;
+        [self cancelTrackingWithEvent:event];
+        controlEventMask |= ASControlNodeEventTouchCancel;
+    } else {
+        // Otherwise, begin tracking.
+        self.tracking = YES;
+
+        // No need to check bounds on touchesBegan as we wouldn't get the call if it wasn't in our bounds.
+        self.touchInside = YES;
+        self.highlighted = YES;
+
+        UITouch *theTouch = [touches anyObject];
+        [self beginTrackingWithTouch:theTouch withEvent:event];
+
+        // Send the appropriate touch-down control event depending on how many times we've been tapped.
+        controlEventMask |= (theTouch.tapCount == 1) ? ASControlNodeEventTouchDown : ASControlNodeEventTouchDownRepeat;
+    }
+
+    [self sendActionsForControlEvents:controlEventMask withEvent:event];
+}
+
+- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+    // If we're not interested in touches, we have nothing to do.
+    if (![self _isInterestedInTouches])
+        return;
+
+    NSParameterAssert([touches count] == 1);
+    UITouch *theTouch = [touches anyObject];
+    CGPoint touchLocation = [theTouch locationInView:self.view];
+
+    // Update our touchInside state.
+    BOOL dragIsInsideBounds = [self pointInside:touchLocation withEvent:nil];
+
+    // Update our highlighted state.
+    CGRect expandedBounds = CGRectInset(self.view.bounds, kASControlNodeExpandedInset, kASControlNodeExpandedInset);
+    BOOL dragIsInsideExpandedBounds = CGRectContainsPoint(expandedBounds, touchLocation);
+    self.touchInside = dragIsInsideExpandedBounds;
+    self.highlighted = dragIsInsideExpandedBounds;
+
+    // Note we are continuing to track the touch.
+    [self continueTrackingWithTouch:theTouch withEvent:event];
+
+    [self sendActionsForControlEvents:(dragIsInsideBounds ? ASControlNodeEventTouchDragInside : ASControlNodeEventTouchDragOutside) withEvent:event];
+}
+
+- (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
+    // If we're not interested in touches, we have nothing to do.
+    if (![self _isInterestedInTouches])
+        return;
+
+    // We're no longer tracking and there is no touch to be inside.
     self.tracking = NO;
     self.touchInside = NO;
+    self.highlighted = NO;
+
+    // Note that we've cancelled tracking.
     [self cancelTrackingWithEvent:event];
-    controlEventMask |= ASControlNodeEventTouchCancel;
-  }
-  else
-  {
-    // Otherwise, begin tracking.
-    self.tracking = YES;
 
-    // No need to check bounds on touchesBegan as we wouldn't get the call if it wasn't in our bounds.
-    self.touchInside = YES;
-    self.highlighted = YES;
+    // Send the cancel event.
+    [self sendActionsForControlEvents:ASControlNodeEventTouchCancel withEvent:event];
+}
 
+- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
+    // If we're not interested in touches, we have nothing to do.
+    if (![self _isInterestedInTouches])
+        return;
+
+    NSParameterAssert([touches count] == 1);
     UITouch *theTouch = [touches anyObject];
-    [self beginTrackingWithTouch:theTouch withEvent:event];
+    CGPoint touchLocation = [theTouch locationInView:self.view];
 
-    // Send the appropriate touch-down control event depending on how many times we've been tapped.
-    controlEventMask |= (theTouch.tapCount == 1) ? ASControlNodeEventTouchDown : ASControlNodeEventTouchDownRepeat;
-  }
+    // Update state.
+    self.tracking = NO;
+    self.touchInside = NO;
+    self.highlighted = NO;
 
-  [self sendActionsForControlEvents:controlEventMask withEvent:event];
+    // Note that we've ended tracking.
+    [self endTrackingWithTouch:theTouch withEvent:event];
+
+    // Send the appropriate touch-up control event.
+    CGRect expandedBounds = CGRectInset(self.view.bounds, kASControlNodeExpandedInset, kASControlNodeExpandedInset);
+    BOOL touchUpIsInsideExpandedBounds = CGRectContainsPoint(expandedBounds, touchLocation);
+
+    [self sendActionsForControlEvents:(touchUpIsInsideExpandedBounds ? ASControlNodeEventTouchUpInside : ASControlNodeEventTouchUpOutside)
+                            withEvent:event];
 }
 
-- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event
-{
-  // If we're not interested in touches, we have nothing to do.
-  if (![self _isInterestedInTouches])
-    return;
+- (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer {
+    // If we're interested in touches, this is a tap (the only gesture we care about) and passed -hitTest for us, then no, you may not begin. Sir.
+    if ([self _isInterestedInTouches] && [gestureRecognizer isKindOfClass:[UITapGestureRecognizer class]])
+        return NO;
 
-  NSParameterAssert([touches count] == 1);
-  UITouch *theTouch = [touches anyObject];
-  CGPoint touchLocation = [theTouch locationInView:self.view];
-
-  // Update our touchInside state.
-  BOOL dragIsInsideBounds = [self pointInside:touchLocation withEvent:nil];
-
-  // Update our highlighted state.
-  CGRect expandedBounds = CGRectInset(self.view.bounds, kASControlNodeExpandedInset, kASControlNodeExpandedInset);
-  BOOL dragIsInsideExpandedBounds = CGRectContainsPoint(expandedBounds, touchLocation);
-  self.touchInside = dragIsInsideExpandedBounds;
-  self.highlighted = dragIsInsideExpandedBounds;
-
-  // Note we are continuing to track the touch.
-  [self continueTrackingWithTouch:theTouch withEvent:event];
-
-  [self sendActionsForControlEvents:(dragIsInsideBounds ? ASControlNodeEventTouchDragInside : ASControlNodeEventTouchDragOutside)
-                          withEvent:event];
-}
-
-- (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event
-{
-  // If we're not interested in touches, we have nothing to do.
-  if (![self _isInterestedInTouches])
-    return;
-
-  // We're no longer tracking and there is no touch to be inside.
-  self.tracking = NO;
-  self.touchInside = NO;
-  self.highlighted = NO;
-
-  // Note that we've cancelled tracking.
-  [self cancelTrackingWithEvent:event];
-
-  // Send the cancel event.
-  [self sendActionsForControlEvents:ASControlNodeEventTouchCancel
-                          withEvent:event];
-}
-
-- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
-{
-  // If we're not interested in touches, we have nothing to do.
-  if (![self _isInterestedInTouches])
-    return;
-
-  NSParameterAssert([touches count] == 1);
-  UITouch *theTouch = [touches anyObject];
-  CGPoint touchLocation = [theTouch locationInView:self.view];
-
-  // Update state.
-  self.tracking = NO;
-  self.touchInside = NO;
-  self.highlighted = NO;
-
-  // Note that we've ended tracking.
-  [self endTrackingWithTouch:theTouch withEvent:event];
-
-  // Send the appropriate touch-up control event.
-  CGRect expandedBounds = CGRectInset(self.view.bounds, kASControlNodeExpandedInset, kASControlNodeExpandedInset);
-  BOOL touchUpIsInsideExpandedBounds = CGRectContainsPoint(expandedBounds, touchLocation);
-
-  [self sendActionsForControlEvents:(touchUpIsInsideExpandedBounds ? ASControlNodeEventTouchUpInside : ASControlNodeEventTouchUpOutside)
-                          withEvent:event];
-}
-
-- (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer
-{
-  // If we're interested in touches, this is a tap (the only gesture we care about) and passed -hitTest for us, then no, you may not begin. Sir.
-  if ([self _isInterestedInTouches] && [gestureRecognizer isKindOfClass:[UITapGestureRecognizer class]])
-    return NO;
-
-  // Otherwise, go ahead. :]
-  return YES;
+    // Otherwise, go ahead. :]
+    return YES;
 }
 
 #pragma mark - Action Messages
-- (void)addTarget:(id)target action:(SEL)action forControlEvents:(ASControlNodeEvent)controlEventMask
-{
-  NSParameterAssert(action);
-  NSParameterAssert(controlEventMask != 0);
+- (void)addTarget:(id)target action:(SEL)action forControlEvents:(ASControlNodeEvent)controlEventMask {
+    NSParameterAssert(action);
+    NSParameterAssert(controlEventMask != 0);
 
-  // Enumerate the events in the mask, adding the target-action pair for each control event included in controlEventMask
-  _ASEnumerateControlEventsIncludedInMaskWithBlock(controlEventMask, ^
-    (ASControlNodeEvent controlEvent)
-    {
-      // Do we already have an event table for this control event?
-      id<NSCopying> eventKey = _ASControlNodeEventKeyForControlEvent(controlEvent);
-      NSMapTable *eventDispatchTable = [_controlEventDispatchTable objectForKey:eventKey];
-      // Create it if necessary.
-      if (!eventDispatchTable)
-      {
-        // Create the dispatch table for this event.
-        eventDispatchTable = [NSMapTable weakToStrongObjectsMapTable];
-        [_controlEventDispatchTable setObject:eventDispatchTable forKey:eventKey];
-      }
+    // Enumerate the events in the mask, adding the target-action pair for each control event included in controlEventMask
+    _ASEnumerateControlEventsIncludedInMaskWithBlock(controlEventMask, ^(ASControlNodeEvent controlEvent) {
+        // Do we already have an event table for this control event?
+        id<NSCopying> eventKey = _ASControlNodeEventKeyForControlEvent(controlEvent);
+        NSMapTable *eventDispatchTable = [_controlEventDispatchTable objectForKey:eventKey];
+        // Create it if necessary.
+        if (!eventDispatchTable) {
+            // Create the dispatch table for this event.
+            eventDispatchTable = [NSMapTable weakToStrongObjectsMapTable];
+            [_controlEventDispatchTable setObject:eventDispatchTable forKey:eventKey];
+        }
 
-      // Have we seen this target before for this event?
-      NSMutableArray *targetActions = [eventDispatchTable objectForKey:target];
-      if (!targetActions)
-      {
-        // Nope. Create an actions array for it.
-        targetActions = [[NSMutableArray alloc] initWithCapacity:kASControlNodeActionDispatchTableInitialCapacity]; // enough to handle common types without re-hashing the dictionary when adding entries.
-        [eventDispatchTable setObject:targetActions forKey:target];
-      }
+        // Have we seen this target before for this event?
+        NSMutableArray *targetActions = [eventDispatchTable objectForKey:target];
+        if (!targetActions) {
+            // Nope. Create an actions array for it.
+            targetActions = [[NSMutableArray alloc]
+            initWithCapacity:
+            kASControlNodeActionDispatchTableInitialCapacity]; // enough to handle common types without re-hashing the dictionary when adding entries.
+            [eventDispatchTable setObject:targetActions forKey:target];
+        }
 
-      // Add the action message.
-      // Note that bizarrely enough UIControl (at least according to the docs) supports duplicate target-action pairs for a particular control event, so we replicate that behavior.
-      [targetActions addObject:NSStringFromSelector(action)];
+        // Add the action message.
+        // Note that bizarrely enough UIControl (at least according to the docs) supports duplicate target-action pairs for a particular control event, so we replicate that behavior.
+        [targetActions addObject:NSStringFromSelector(action)];
     });
 
-  self.userInteractionEnabled = YES;
+    self.userInteractionEnabled = YES;
 }
 
-- (NSArray *)actionsForTarget:(id)target forControlEvent:(ASControlNodeEvent)controlEvent
-{
-  NSParameterAssert(target);
-  NSParameterAssert(controlEvent != 0 && controlEvent != ASControlNodeEventAllEvents);
+- (NSArray *)actionsForTarget:(id)target forControlEvent:(ASControlNodeEvent)controlEvent {
+    NSParameterAssert(target);
+    NSParameterAssert(controlEvent != 0 && controlEvent != ASControlNodeEventAllEvents);
 
-  // Grab the event dispatch table for this event.
-  NSMapTable *eventDispatchTable = [_controlEventDispatchTable objectForKey:_ASControlNodeEventKeyForControlEvent(controlEvent)];
-  if (!eventDispatchTable)
-    return nil;
+    // Grab the event dispatch table for this event.
+    NSMapTable *eventDispatchTable = [_controlEventDispatchTable objectForKey:_ASControlNodeEventKeyForControlEvent(controlEvent)];
+    if (!eventDispatchTable)
+        return nil;
 
-  // Return the actions for this target.
-  return [eventDispatchTable objectForKey:target];
+    // Return the actions for this target.
+    return [eventDispatchTable objectForKey:target];
 }
 
-- (NSSet *)allTargets
-{
-  NSMutableSet *targets = [[NSMutableSet alloc] init];
+- (NSSet *)allTargets {
+    NSMutableSet *targets = [[NSMutableSet alloc] init];
 
-  // Look at each event...
-  for (NSMapTable *eventDispatchTable in [_controlEventDispatchTable allValues])
-  {
-    // and each event's targets...
-    for (id target in eventDispatchTable)
-      [targets addObject:target];
-  }
+    // Look at each event...
+    for (NSMapTable *eventDispatchTable in [_controlEventDispatchTable allValues]) {
+        // and each event's targets...
+        for (id target in eventDispatchTable)
+            [targets addObject:target];
+    }
 
-  return targets;
+    return targets;
 }
 
-- (void)removeTarget:(id)target action:(SEL)action forControlEvents:(ASControlNodeEvent)controlEventMask
-{
-  NSParameterAssert(controlEventMask != 0);
+- (void)removeTarget:(id)target action:(SEL)action forControlEvents:(ASControlNodeEvent)controlEventMask {
+    NSParameterAssert(controlEventMask != 0);
 
-  // Enumerate the events in the mask, removing the target-action pair for each control event included in controlEventMask.
-  _ASEnumerateControlEventsIncludedInMaskWithBlock(controlEventMask, ^
-    (ASControlNodeEvent controlEvent)
-    {
-      // Grab the dispatch table for this event (if we have it).
-      id<NSCopying> eventKey = _ASControlNodeEventKeyForControlEvent(controlEvent);
-      NSMapTable *eventDispatchTable = [_controlEventDispatchTable objectForKey:eventKey];
-      if (!eventDispatchTable)
-        return;
+    // Enumerate the events in the mask, removing the target-action pair for each control event included in controlEventMask.
+    _ASEnumerateControlEventsIncludedInMaskWithBlock(controlEventMask, ^(ASControlNodeEvent controlEvent) {
+        // Grab the dispatch table for this event (if we have it).
+        id<NSCopying> eventKey = _ASControlNodeEventKeyForControlEvent(controlEvent);
+        NSMapTable *eventDispatchTable = [_controlEventDispatchTable objectForKey:eventKey];
+        if (!eventDispatchTable)
+            return;
 
-      void (^removeActionFromTarget)(id <NSCopying> targetKey, SEL action) = ^
-        (id aTarget, SEL theAction)
-        {
-          // Grab the targetActions for this target.
-          NSMutableArray *targetActions = [eventDispatchTable objectForKey:aTarget];
+        void (^removeActionFromTarget)(id<NSCopying> targetKey, SEL action) = ^(id aTarget, SEL theAction) {
+            // Grab the targetActions for this target.
+            NSMutableArray *targetActions = [eventDispatchTable objectForKey:aTarget];
 
-          // Remove action if we have it.
-          if (theAction)
-            [targetActions removeObject:NSStringFromSelector(theAction)];
-          // Or all actions if not.
-          else
-            [targetActions removeAllObjects];
+            // Remove action if we have it.
+            if (theAction)
+                [targetActions removeObject:NSStringFromSelector(theAction)];
+            // Or all actions if not.
+            else
+                [targetActions removeAllObjects];
 
-          // If there are no actions left, remove this target entry.
-          if ([targetActions count] == 0)
-          {
-            [eventDispatchTable removeObjectForKey:aTarget];
+            // If there are no actions left, remove this target entry.
+            if ([targetActions count] == 0) {
+                [eventDispatchTable removeObjectForKey:aTarget];
 
-            // If there are no targets for this event anymore, remove it.
-            if ([eventDispatchTable count] == 0)
-              [_controlEventDispatchTable removeObjectForKey:eventKey];
-          }
+                // If there are no targets for this event anymore, remove it.
+                if ([eventDispatchTable count] == 0)
+                    [_controlEventDispatchTable removeObjectForKey:eventKey];
+            }
         };
 
-
-      // Unlike addTarget:, if target is nil here we remove all targets with action.
-      if (!target)
-      {
-        // Look at every target, removing target-pairs that have action (or all of its actions).
-        for (id aTarget in eventDispatchTable)
-          removeActionFromTarget(aTarget, action);
-      }
-      else
-        removeActionFromTarget(target, action);
+        // Unlike addTarget:, if target is nil here we remove all targets with action.
+        if (!target) {
+            // Look at every target, removing target-pairs that have action (or all of its actions).
+            for (id aTarget in eventDispatchTable)
+                removeActionFromTarget(aTarget, action);
+        } else
+            removeActionFromTarget(target, action);
     });
 }
 
 #pragma mark -
-- (void)sendActionsForControlEvents:(ASControlNodeEvent)controlEvents withEvent:(UIEvent *)event
-{
-  NSParameterAssert(controlEvents != 0);
+- (void)sendActionsForControlEvents:(ASControlNodeEvent)controlEvents withEvent:(UIEvent *)event {
+    NSParameterAssert(controlEvents != 0);
 
-  // Enumerate the events in the mask, invoking the target-action pairs for each.
-  _ASEnumerateControlEventsIncludedInMaskWithBlock(controlEvents, ^
-    (ASControlNodeEvent controlEvent)
-    {
-      NSMapTable *eventDispatchTable = [_controlEventDispatchTable objectForKey:_ASControlNodeEventKeyForControlEvent(controlEvent)];
+    // Enumerate the events in the mask, invoking the target-action pairs for each.
+    _ASEnumerateControlEventsIncludedInMaskWithBlock(controlEvents, ^(ASControlNodeEvent controlEvent) {
+        NSMapTable *eventDispatchTable = [_controlEventDispatchTable objectForKey:_ASControlNodeEventKeyForControlEvent(controlEvent)];
 
-      // For each target interested in this event...
-      for (id target in eventDispatchTable)
-      {
-        NSArray *targetActions = [eventDispatchTable objectForKey:target];
+        // For each target interested in this event...
+        for (id target in eventDispatchTable) {
+            NSArray *targetActions = [eventDispatchTable objectForKey:target];
 
-        // Invoke each of the actions on target.
-        for (NSString *actionMessage in targetActions)
-        {
-          SEL action = NSSelectorFromString(actionMessage);
+            // Invoke each of the actions on target.
+            for (NSString *actionMessage in targetActions) {
+                SEL action = NSSelectorFromString(actionMessage);
 
-          // Hand off to UIApplication to send the action message.
-          // This also handles sending to the first responder is target is nil.
-          [[UIApplication sharedApplication] sendAction:action to:target from:self forEvent:event];
+                // Hand off to UIApplication to send the action message.
+                // This also handles sending to the first responder is target is nil.
+                [[UIApplication sharedApplication] sendAction:action to:target from:self forEvent:event];
+            }
         }
-      }
     });
 }
 
 #pragma mark - Convenience
-- (BOOL)_isInterestedInTouches
-{
-  // We're only interested in touches if we're enabled and we've got targets to talk to.
-  return self.enabled && ([_controlEventDispatchTable count] > 0);
+- (BOOL)_isInterestedInTouches {
+    // We're only interested in touches if we're enabled and we've got targets to talk to.
+    return self.enabled && ([_controlEventDispatchTable count] > 0);
 }
 
-id<NSCopying> _ASControlNodeEventKeyForControlEvent(ASControlNodeEvent controlEvent)
-{
-  return [NSNumber numberWithInteger:controlEvent];
+id<NSCopying> _ASControlNodeEventKeyForControlEvent(ASControlNodeEvent controlEvent) {
+    return [NSNumber numberWithInteger:controlEvent];
 }
 
-void _ASEnumerateControlEventsIncludedInMaskWithBlock(ASControlNodeEvent mask, void (^block)(ASControlNodeEvent anEvent))
-{
-  // Start with our first event (touch down) and work our way up to the last event (touch cancel)
-  for (ASControlNodeEvent thisEvent = ASControlNodeEventTouchDown; thisEvent <= ASControlNodeEventTouchCancel; thisEvent <<= 1)
-  {
-    // If it's included in the mask, invoke the block.
-    if ((mask & thisEvent) == thisEvent)
-      block(thisEvent);
-  }
+void _ASEnumerateControlEventsIncludedInMaskWithBlock(ASControlNodeEvent mask, void (^block)(ASControlNodeEvent anEvent)) {
+    // Start with our first event (touch down) and work our way up to the last event (touch cancel)
+    for (ASControlNodeEvent thisEvent = ASControlNodeEventTouchDown; thisEvent <= ASControlNodeEventTouchCancel; thisEvent <<= 1) {
+        // If it's included in the mask, invoke the block.
+        if ((mask & thisEvent) == thisEvent)
+            block(thisEvent);
+    }
 }
 
 #pragma mark - For Subclasses
-- (BOOL)beginTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)touchEvent
-{
-  return YES;
+- (BOOL)beginTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)touchEvent {
+    return YES;
 }
 
-- (BOOL)continueTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)touchEvent
-{
-  return YES;
+- (BOOL)continueTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)touchEvent {
+    return YES;
 }
 
-- (void)cancelTrackingWithEvent:(UIEvent *)touchEvent
-{
+- (void)cancelTrackingWithEvent:(UIEvent *)touchEvent {
 }
 
-- (void)endTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)touchEvent
-{
+- (void)endTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)touchEvent {
 }
 
 @end

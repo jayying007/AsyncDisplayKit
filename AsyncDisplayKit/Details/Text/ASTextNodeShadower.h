@@ -16,10 +16,9 @@
  *   CGRect insetRect = UIEdgeInsetsRect(originalRect, insets);
  *   CGRect equalToOriginalRect = UIEdgeInsetsRect(originalRect, ASDNEdgeInsetsInvert(insets));
  */
-static inline UIEdgeInsets ASDNEdgeInsetsInvert(UIEdgeInsets insets)
-{
-  UIEdgeInsets invertedInsets = UIEdgeInsetsMake(-insets.top, -insets.left, -insets.bottom, -insets.right);
-  return invertedInsets;
+static inline UIEdgeInsets ASDNEdgeInsetsInvert(UIEdgeInsets insets) {
+    UIEdgeInsets invertedInsets = UIEdgeInsetsMake(-insets.top, -insets.left, -insets.bottom, -insets.right);
+    return invertedInsets;
 }
 
 /**

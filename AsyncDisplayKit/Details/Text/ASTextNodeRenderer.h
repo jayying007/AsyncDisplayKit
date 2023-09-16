@@ -8,9 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
-typedef void (^as_renderer_index_block_t)(NSUInteger characterIndex,
-                                          CGRect glyphBoundingRect,
-                                          BOOL *stop);
+typedef void (^as_renderer_index_block_t)(NSUInteger characterIndex, CGRect glyphBoundingRect, BOOL *stop);
 
 /*
  * Measure options are used to specify which type of line height measurement to
@@ -29,9 +27,9 @@ typedef void (^as_renderer_index_block_t)(NSUInteger characterIndex,
  *
  */
 typedef NS_ENUM(NSUInteger, ASTextNodeRendererMeasureOption) {
-  ASTextNodeRendererMeasureOptionLineHeight,
-  ASTextNodeRendererMeasureOptionCapHeight,
-  ASTextNodeRendererMeasureOptionBlock
+    ASTextNodeRendererMeasureOptionLineHeight,
+    ASTextNodeRendererMeasureOptionCapHeight,
+    ASTextNodeRendererMeasureOptionBlock
 };
 
 /*
@@ -122,8 +120,7 @@ typedef NS_ENUM(NSUInteger, ASTextNodeRendererMeasureOption) {
  *
  * Triggers initialization of textkit components, truncation, and sizing.
  */
-- (NSArray *)rectsForTextRange:(NSRange)textRange
-                 measureOption:(ASTextNodeRendererMeasureOption)measureOption;
+- (NSArray *)rectsForTextRange:(NSRange)textRange measureOption:(ASTextNodeRendererMeasureOption)measureOption;
 
 /*
  * Enumerate the text character indexes at a position within the coordinate
@@ -150,8 +147,7 @@ typedef NS_ENUM(NSUInteger, ASTextNodeRendererMeasureOption) {
  *
  * Triggers initialization of textkit components, truncation, and sizing.
  */
-- (void)enumerateTextIndexesAtPosition:(CGPoint)position
-                            usingBlock:(as_renderer_index_block_t)block;
+- (void)enumerateTextIndexesAtPosition:(CGPoint)position usingBlock:(as_renderer_index_block_t)block;
 
 #pragma mark - Text Ranges
 

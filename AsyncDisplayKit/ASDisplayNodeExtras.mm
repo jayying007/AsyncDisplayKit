@@ -10,124 +10,110 @@
 
 #import "ASDisplayNodeInternal.h"
 
-ASDisplayNode *ASLayerToDisplayNode(CALayer *layer)
-{
-  return layer.asyncdisplaykit_node;
+ASDisplayNode *ASLayerToDisplayNode(CALayer *layer) {
+    return layer.asyncdisplaykit_node;
 }
 
-ASDisplayNode *ASViewToDisplayNode(UIView *view)
-{
-  return view.asyncdisplaykit_node;
+ASDisplayNode *ASViewToDisplayNode(UIView *view) {
+    return view.asyncdisplaykit_node;
 }
 
-id ASDisplayNodeFind(ASDisplayNode *node, BOOL (^block)(ASDisplayNode *node))
-{
-  CALayer *layer = node.layer;
+id ASDisplayNodeFind(ASDisplayNode *node, BOOL (^block)(ASDisplayNode *node)) {
+    CALayer *layer = node.layer;
 
-  while (layer) {
-    node = ASLayerToDisplayNode(layer);
-    if (block(node)) {
-      return node;
+    while (layer) {
+        node = ASLayerToDisplayNode(layer);
+        if (block(node)) {
+            return node;
+        }
+        layer = layer.superlayer;
     }
-    layer = layer.superlayer;
-  }
 
-  return nil;
+    return nil;
 }
 
-id ASDisplayNodeFindClass(ASDisplayNode *start, Class c)
-{
-  return ASDisplayNodeFind(start, ^(ASDisplayNode *n) {
-    return [n isKindOfClass:c];
-  });
+id ASDisplayNodeFindClass(ASDisplayNode *start, Class c) {
+    return ASDisplayNodeFind(start, ^(ASDisplayNode *n) {
+        return [n isKindOfClass:c];
+    });
 }
 
-static void _ASCollectDisplayNodes(NSMutableArray *array, CALayer *layer)
-{
-  ASDisplayNode *node = ASLayerToDisplayNode(layer);
+static void _ASCollectDisplayNodes(NSMutableArray *array, CALayer *layer) {
+    ASDisplayNode *node = ASLayerToDisplayNode(layer);
 
-  if (nil != node) {
-    [array addObject:node];
-  }
+    if (nil != node) {
+        [array addObject:node];
+    }
 
-  for (CALayer *sublayer in layer.sublayers)
-    _ASCollectDisplayNodes(array, sublayer);
+    for (CALayer *sublayer in layer.sublayers)
+        _ASCollectDisplayNodes(array, sublayer);
 }
 
-extern NSArray *ASCollectDisplayNodes(ASDisplayNode *node)
-{
-  NSMutableArray *list = [NSMutableArray array];
-  for (CALayer *sublayer in node.layer.sublayers) {
-    _ASCollectDisplayNodes(list, sublayer);
-  }
-  return list;
+extern NSArray *ASCollectDisplayNodes(ASDisplayNode *node) {
+    NSMutableArray *list = [NSMutableArray array];
+    for (CALayer *sublayer in node.layer.sublayers) {
+        _ASCollectDisplayNodes(list, sublayer);
+    }
+    return list;
 }
 
 #pragma mark - Find all subnodes
 
-static void _ASDisplayNodeFindAllSubnodes(NSMutableArray *array, ASDisplayNode *node, BOOL (^block)(ASDisplayNode *node))
-{
-  if (!node)
-    return;
+static void _ASDisplayNodeFindAllSubnodes(NSMutableArray *array, ASDisplayNode *node, BOOL (^block)(ASDisplayNode *node)) {
+    if (!node)
+        return;
 
-  for (ASDisplayNode *subnode in node.subnodes) {
-    if (block(subnode)) {
-      [array addObject:node];
+    for (ASDisplayNode *subnode in node.subnodes) {
+        if (block(subnode)) {
+            [array addObject:node];
+        }
+
+        _ASDisplayNodeFindAllSubnodes(array, subnode, block);
     }
-
-    _ASDisplayNodeFindAllSubnodes(array, subnode, block);
-  }
 }
 
-extern NSArray *ASDisplayNodeFindAllSubnodes(ASDisplayNode *start, BOOL (^block)(ASDisplayNode *node))
-{
-  NSMutableArray *list = [NSMutableArray array];
-  _ASDisplayNodeFindAllSubnodes(list, start, block);
-  return list;
+extern NSArray *ASDisplayNodeFindAllSubnodes(ASDisplayNode *start, BOOL (^block)(ASDisplayNode *node)) {
+    NSMutableArray *list = [NSMutableArray array];
+    _ASDisplayNodeFindAllSubnodes(list, start, block);
+    return list;
 }
 
-extern NSArray *ASDisplayNodeFindAllSubnodesOfClass(ASDisplayNode *start, Class c)
-{
-  return ASDisplayNodeFindAllSubnodes(start, ^(ASDisplayNode *n) {
-    return [n isKindOfClass:c];
-  });
+extern NSArray *ASDisplayNodeFindAllSubnodesOfClass(ASDisplayNode *start, Class c) {
+    return ASDisplayNodeFindAllSubnodes(start, ^(ASDisplayNode *n) {
+        return [n isKindOfClass:c];
+    });
 }
 
 #pragma mark - Find first subnode
 
-static ASDisplayNode *_ASDisplayNodeFindFirstSubnode(ASDisplayNode *startNode, BOOL includeStartNode, BOOL (^block)(ASDisplayNode *node))
-{
-  for (ASDisplayNode *subnode in startNode.subnodes) {
-    ASDisplayNode *foundNode = _ASDisplayNodeFindFirstSubnode(subnode, YES, block);
-    if (foundNode) {
-      return foundNode;
+static ASDisplayNode *_ASDisplayNodeFindFirstSubnode(ASDisplayNode *startNode, BOOL includeStartNode, BOOL (^block)(ASDisplayNode *node)) {
+    for (ASDisplayNode *subnode in startNode.subnodes) {
+        ASDisplayNode *foundNode = _ASDisplayNodeFindFirstSubnode(subnode, YES, block);
+        if (foundNode) {
+            return foundNode;
+        }
     }
-  }
 
-  if (includeStartNode && block(startNode))
-    return startNode;
+    if (includeStartNode && block(startNode))
+        return startNode;
 
-  return nil;
+    return nil;
 }
 
-extern id ASDisplayNodeFindFirstSubnode(ASDisplayNode *startNode, BOOL (^block)(ASDisplayNode *node))
-{
-  return _ASDisplayNodeFindFirstSubnode(startNode, NO, block);
+extern id ASDisplayNodeFindFirstSubnode(ASDisplayNode *startNode, BOOL (^block)(ASDisplayNode *node)) {
+    return _ASDisplayNodeFindFirstSubnode(startNode, NO, block);
 }
 
-extern id ASDisplayNodeFindFirstSubnodeOfClass(ASDisplayNode *start, Class c)
-{
-  return ASDisplayNodeFindFirstSubnode(start, ^(ASDisplayNode *n) {
-    return [n isKindOfClass:c];
-  });
+extern id ASDisplayNodeFindFirstSubnodeOfClass(ASDisplayNode *start, Class c) {
+    return ASDisplayNodeFindFirstSubnode(start, ^(ASDisplayNode *n) {
+        return [n isKindOfClass:c];
+    });
 }
 
-void ASDisplayNodeDisableHierarchyNotifications(ASDisplayNode *node)
-{
-  [node __incrementVisibilityNotificationsDisabled];
+void ASDisplayNodeDisableHierarchyNotifications(ASDisplayNode *node) {
+    [node __incrementVisibilityNotificationsDisabled];
 }
 
-void ASDisplayNodeEnableHierarchyNotifications(ASDisplayNode *node)
-{
-  [node __decrementVisibilityNotificationsDisabled];
+void ASDisplayNodeEnableHierarchyNotifications(ASDisplayNode *node) {
+    [node __decrementVisibilityNotificationsDisabled];
 }

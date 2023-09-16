@@ -31,7 +31,6 @@ ASDISPLAYNODE_EXTERN_C_BEGIN
  */
 BOOL ASAttributeWithNameIsUnsupportedCoreTextAttribute(NSString *attributeName);
 
-
 /**
  @abstract Returns an attributes dictionary for use by NSAttributedString, given a dictionary of Core Text attributes.
  @param coreTextAttributes An NSDictionary whose keys are CFAttributedStringRef attributes.

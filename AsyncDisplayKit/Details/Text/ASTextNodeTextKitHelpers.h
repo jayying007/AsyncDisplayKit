@@ -12,10 +12,10 @@
 #import <UIKit/UIKit.h>
 
 typedef struct {
-  NSTextStorage *textStorage;
-  NSTextContainer *textContainer;
-  NSLayoutManager *layoutManager;
-  UITextView *textView;
+    NSTextStorage *textStorage;
+    NSTextContainer *textContainer;
+    NSLayoutManager *layoutManager;
+    UITextView *textView;
 } ASTextKitComponents;
 
 // Convenience.
