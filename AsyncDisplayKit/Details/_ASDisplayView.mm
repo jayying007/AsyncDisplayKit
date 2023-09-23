@@ -13,7 +13,6 @@
 #import "_ASCoreAnimationExtras.h"
 #import "_ASAsyncTransactionContainer.h"
 #import "ASAssert.h"
-#import "ASDisplayNodeExtras.h"
 #import "ASDisplayNodeInternal.h"
 #import "ASDisplayNode+Subclasses.h"
 
@@ -26,8 +25,8 @@
 @end
 
 @implementation _ASDisplayView {
-    __unsafe_unretained ASDisplayNode
-    *_node; // Though UIView has a .node property added via category, since we can add an ivar to a subclass, use that for performance.
+    // Though UIView has a .node property added via category, since we can add an ivar to a subclass, use that for performance.
+    __unsafe_unretained ASDisplayNode *_node;
     BOOL _inHitTest;
     BOOL _inPointInside;
 }
@@ -50,13 +49,6 @@
 }
 
 #pragma mark - UIView Overrides
-
-- (id)initWithFrame:(CGRect)frame {
-    if (!(self = [super initWithFrame:frame]))
-        return nil;
-
-    return self;
-}
 
 - (void)willMoveToSuperview:(UIView *)newSuperview {
     // Keep the node alive while the view is in a view hierarchy.  This helps ensure that async-drawing views can always
@@ -183,11 +175,9 @@
     }
 }
 
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_6_0
 - (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer {
     return [_node gestureRecognizerShouldBegin:gestureRecognizer];
 }
-#endif
 
 - (void)asyncdisplaykit_asyncTransactionContainerStateDidChange {
     [_node asyncdisplaykit_asyncTransactionContainerStateDidChange];

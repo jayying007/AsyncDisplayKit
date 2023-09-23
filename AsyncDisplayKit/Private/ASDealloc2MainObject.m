@@ -16,10 +16,9 @@
 #error This file must be compiled without ARC. Use -fno-objc-arc.
 #endif
 
-@interface ASDealloc2MainObject ()
-{
-  @private
-  int _retainCount;
+@interface ASDealloc2MainObject () {
+@private
+    int _retainCount;
 }
 @end
 

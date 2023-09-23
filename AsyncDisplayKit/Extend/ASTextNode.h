@@ -10,10 +10,7 @@
 
 @protocol ASTextNodeDelegate;
 
-typedef NS_ENUM(NSUInteger, ASTextNodeHighlightStyle) {
-  ASTextNodeHighlightStyleLight,
-  ASTextNodeHighlightStyleDark
-};
+typedef NS_ENUM(NSUInteger, ASTextNodeHighlightStyle) { ASTextNodeHighlightStyleLight, ASTextNodeHighlightStyleDark };
 
 /**
  @abstract Draws interactive rich text.
@@ -117,7 +114,6 @@ typedef NS_ENUM(NSUInteger, ASTextNodeHighlightStyle) {
  */
 - (CGRect)trailingRect;
 
-
 #pragma mark - Actions
 
 /**
@@ -175,7 +171,11 @@ typedef NS_ENUM(NSUInteger, ASTextNodeHighlightStyle) {
  @param value The value of the tapped attribute.
  @param point The point within textNode, in textNode's coordinate system, that was tapped.
  */
-- (void)textNode:(ASTextNode *)textNode longPressedLinkAttribute:(NSString *)attribute value:(id)value atPoint:(CGPoint)point textRange:(NSRange)textRange;
+- (void)textNode:(ASTextNode *)textNode
+longPressedLinkAttribute:(NSString *)attribute
+                   value:(id)value
+                 atPoint:(CGPoint)point
+               textRange:(NSRange)textRange;
 
 //! @abstract Called when the text node's truncation string has been tapped.
 - (void)textNodeTappedTruncationToken:(ASTextNode *)textNode;

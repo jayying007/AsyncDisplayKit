@@ -12,7 +12,7 @@
 @protocol _ASDisplayLayerDelegate;
 
 // Type for the cancellation checker block passed into the async display blocks. YES means the operation has been cancelled, NO means continue.
-typedef BOOL(^asdisplaynode_iscancelled_block_t)(void);
+typedef BOOL (^asdisplaynode_iscancelled_block_t)(void);
 
 @interface _ASDisplayLayer : CALayer
 
@@ -38,8 +38,6 @@ typedef BOOL(^asdisplaynode_iscancelled_block_t)(void);
  */
 + (dispatch_queue_t)displayQueue;
 
-@property (nonatomic, strong, readonly) ASSentinel *displaySentinel;
-
 /**
  @summary Delegate for asynchronous display of the layer.
 
@@ -52,6 +50,8 @@ typedef BOOL(^asdisplaynode_iscancelled_block_t)(void);
 
  @desc This can be used to suspend all display calls while the receiver is still in the view hierarchy.  If you
  want to just cancel pending async display, use cancelAsyncDisplay instead.
+ 
+ 与cancelAsyncDisplay的区别：前者只取消当前即将display的任务，后续新的display任务还能执行。而后者是之后所有display都不再执行。
 
  @default NO
  */
@@ -80,15 +80,18 @@ typedef BOOL(^asdisplaynode_iscancelled_block_t)(void);
 /**
  @summary Delegate method to draw layer contents into a CGBitmapContext. The current UIGraphics context will be set to an appropriate context.
  @param parameters An object describing all of the properties you need to draw. Return this from -drawParametersForAsyncLayer:
- @param isCancelled Execute this block to check whether the current drawing operation has been cancelled to avoid unnecessary work. A return value of YES means cancel drawing and return.
+ @param isCancelledBlock Execute this block to check whether the current drawing operation has been cancelled to avoid unnecessary work. A return value of YES means cancel drawing and return.
  @param isRasterizing YES if the layer is being rasterized into another layer, in which case drawRect: probably wants to avoid doing things like filling its bounds with a zero-alpha color to clear the backing store.
  */
-+ (void)drawRect:(CGRect)bounds withParameters:(id<NSObject>)parameters isCancelled:(asdisplaynode_iscancelled_block_t)isCancelledBlock isRasterizing:(BOOL)isRasterizing;
++ (void)drawRect:(CGRect)bounds
+  withParameters:(id<NSObject>)parameters
+     isCancelled:(asdisplaynode_iscancelled_block_t)isCancelledBlock
+   isRasterizing:(BOOL)isRasterizing;
 
 /**
  @summary Delegate override to provide new layer contents as a UIImage.
  @param parameters An object describing all of the properties you need to draw. Return this from -drawParametersForAsyncLayer:
- @param isCancelled Execute this block to check whether the current drawing operation has been cancelled to avoid unnecessary work. A return value of YES means cancel drawing and return.
+ @param isCancelledBlock Execute this block to check whether the current drawing operation has been cancelled to avoid unnecessary work. A return value of YES means cancel drawing and return.
  @return A UIImage with contents that are ready to display on the main thread. Make sure that the image is already decoded before returning it here.
  */
 + (UIImage *)displayWithParameters:(id<NSObject>)parameters isCancelled:(asdisplaynode_iscancelled_block_t)isCancelledBlock;

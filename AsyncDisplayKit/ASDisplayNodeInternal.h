@@ -13,7 +13,6 @@
 
 #import "_ASDisplayLayer.h"
 #import "_AS-objc-internal.h"
-#import "ASDisplayNodeExtraIvars.h"
 #import "ASDisplayNode.h"
 #import "ASSentinel.h"
 #import "ASThread.h"
@@ -27,58 +26,54 @@ BOOL ASDisplayNodeSubclassOverridesSelector(Class subclass, SEL selector);
 
 #define TIME_DISPLAYNODE_OPS (DEBUG || PROFILE)
 
-@interface ASDisplayNode () <_ASDisplayLayerDelegate>
-{
+@interface ASDisplayNode () <_ASDisplayLayerDelegate> {
 @protected
-  ASDN::RecursiveMutex _propertyLock;  // Protects access to the _view, _pendingViewState, _subnodes, _supernode, _renderingSubnodes, and other properties which are accessed from multiple threads.
+    // Protects access to the _view, _pendingViewState, _subnodes, _supernode, _renderingSubnodes, and other properties which are accessed from multiple threads.
+    ASDN::RecursiveMutex _propertyLock;
 
-  ASDisplayNode * __weak _supernode;
+    ASDisplayNode *__weak _supernode;
 
-  ASSentinel *_displaySentinel;
-  ASSentinel *_replaceAsyncSentinel;
+    ASSentinel *_displaySentinel;
 
-  // This is the desired contentsScale, not the scale at which the layer's contents should be displayed
-  CGFloat _contentsScaleForDisplay;
+    // This is the desired contentsScale, not the scale at which the layer's contents should be displayed
+    CGFloat _contentsScaleForDisplay;
 
-  CGSize _size;
-  CGSize _constrainedSize;
-  UIEdgeInsets _hitTestSlop;
-  NSMutableArray *_subnodes;
+    CGSize _size;
+    CGSize _constrainedSize;
+    UIEdgeInsets _hitTestSlop;
+    NSMutableArray *_subnodes;
 
-  Class _viewClass;
-  Class _layerClass;
-  UIView *_view;
-  CALayer *_layer;
+    Class _viewClass;
+    Class _layerClass;
+    UIView *_view;
+    CALayer *_layer;
 
-  _ASPendingState *_pendingViewState;
+    _ASPendingState *_pendingViewState;
 
-  struct {
-    unsigned implementsDisplay:1;
-    unsigned isSynchronous:1;
-    unsigned isLayerBacked:1;
-    unsigned sizeCalculated:1;
-    unsigned preventOrCancelDisplay:1;
-    unsigned displaysAsynchronously:1;
-    unsigned shouldRasterizeDescendants:1;
-    unsigned visibilityNotificationsDisabled:visibilityNotificationsDisabledBits;
-    unsigned isInEnterHierarchy:1;
-    unsigned isInExitHierarchy:1;
-    unsigned inWindow:1;
-    unsigned hasWillDisplayAsyncLayer:1;
-    unsigned hasDrawParametersForAsyncLayer:1;
-    unsigned hasClassDisplay:1;
-  } _flags;
-
-  ASDisplayNodeExtraIvars _extra;
+    struct {
+        unsigned implementsDisplay : 1;
+        unsigned isSynchronous : 1;
+        unsigned isLayerBacked : 1;
+        unsigned sizeCalculated : 1;
+        unsigned preventOrCancelDisplay : 1;
+        unsigned displaysAsynchronously : 1;
+        unsigned shouldRasterizeDescendants : 1;
+        unsigned visibilityNotificationsDisabled : visibilityNotificationsDisabledBits;
+        unsigned isInEnterHierarchy : 1;
+        unsigned isInExitHierarchy : 1;
+        unsigned inWindow : 1;
+        unsigned hasWillDisplayAsyncLayer : 1;
+        unsigned hasDrawParametersForAsyncLayer : 1;
+        unsigned hasClassDisplay : 1;
+    } _flags;
 
 #if TIME_DISPLAYNODE_OPS
 @public
-  NSTimeInterval _debugTimeToCreateView;
-  NSTimeInterval _debugTimeToApplyPendingState;
-  NSTimeInterval _debugTimeToAddSubnodeViews;
-  NSTimeInterval _debugTimeForDidLoad;
+    NSTimeInterval _debugTimeToCreateView;
+    NSTimeInterval _debugTimeToApplyPendingState;
+    NSTimeInterval _debugTimeToAddSubnodeViews;
+    NSTimeInterval _debugTimeForDidLoad;
 #endif
-
 }
 
 // The _ASDisplayLayer backing the node, if any.
@@ -95,7 +90,7 @@ BOOL ASDisplayNodeSubclassOverridesSelector(Class subclass, SEL selector);
 - (void)__setSupernode:(ASDisplayNode *)supernode;
 
 // The visibility state of the node.  Changed before calling willAppear, willDisappear, and didDisappear.
-@property (nonatomic, readwrite, assign, getter = isInWindow) BOOL inWindow;
+@property (nonatomic, readwrite, assign, getter=isInWindow) BOOL inWindow;
 
 // Private API for helper funcitons / unit tests. Use ASDisplayNodeDisableHierarchyNotifications() to control this.
 - (BOOL)__visibilityNotificationsDisabled;

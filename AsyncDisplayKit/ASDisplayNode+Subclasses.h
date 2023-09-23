@@ -13,7 +13,6 @@
 #import <AsyncDisplayKit/ASDisplayNode.h>
 #import <AsyncDisplayKit/ASThread.h>
 
-
 /**
  * The subclass header _ASDisplayNode+Subclasses_ defines the following methods that either must or can be overriden by
  * subclasses of ASDisplayNode.
@@ -36,38 +35,21 @@
 
 @interface ASDisplayNode (ASDisplayNodeSubclasses)
 
-
 /** @name View Configuration */
-
 
 /**
  * @return The view class to use when creating a new display node instance. Defaults to _ASDisplayView.
  */
 + (Class)viewClass;
 
-
 /** @name Properties */
-
-
-/**
- * @abstract The scale factor to apply to the rendering.
- *
- * @discussion Use setNeedsDisplayAtScale: to set a value and then after display, the display node will set the layer's
- * contentsScale. This is to prevent jumps when re-rasterizing at a different contentsScale.
- * Read this property if you need to know the future contentsScale of your layer, eg in drawParameters.
- *
- * @see setNeedsDisplayAtScale:
- */
-@property (nonatomic, assign, readonly) CGFloat contentsScaleForDisplay;
 
 /**
  * @abstract Whether the view or layer of this display node is currently in a window
  */
 @property (nonatomic, readonly, assign, getter=isInWindow) BOOL inWindow;
 
-
 /** @name View Lifecycle */
-
 
 /**
  * @abstract Called on the main thread immediately after self.view is created.
@@ -76,9 +58,7 @@
  */
 - (void)didLoad ASDISPLAYNODE_REQUIRES_SUPER;
 
-
 /** @name Layout */
-
 
 /**
  * @abstract Called on the main thread by the view's -layoutSubviews.
@@ -95,9 +75,7 @@
  */
 - (void)layoutDidFinish;
 
-
 /** @name Sizing */
-
 
 /**
  * @abstract Return the calculated size.
@@ -119,9 +97,7 @@
  */
 - (void)invalidateCalculatedSize;
 
-
 /** @name Drawing */
-
 
 /**
  * @summary Delegate method to draw layer contents into a CGBitmapContext. The current UIGraphics context will be set
@@ -129,7 +105,7 @@
  *
  * @param parameters An object describing all of the properties you need to draw. Return this from
  * -drawParametersForAsyncLayer:
- * @param isCancelled Execute this block to check whether the current drawing operation has been cancelled to avoid
+ * @param isCancelledBlock Execute this block to check whether the current drawing operation has been cancelled to avoid
  * unnecessary work. A return value of YES means cancel drawing and return.
  * @param isRasterizing YES if the layer is being rasterized into another layer, in which case drawRect: probably wants
  * to avoid doing things like filling its bounds with a zero-alpha color to clear the backing store.
@@ -146,7 +122,7 @@
  *
  * @param parameters An object describing all of the properties you need to draw. Return this from
  * -drawParametersForAsyncLayer:
- * @param isCancelled Execute this block to check whether the current drawing operation has been cancelled to avoid
+ * @param isCancelledBlock Execute this block to check whether the current drawing operation has been cancelled to avoid
  * unnecessary work. A return value of YES means cancel drawing and return.
  *
  * @return A UIImage with contents that are ready to display on the main thread. Make sure that the image is already
@@ -154,8 +130,7 @@
  *
  * @note Called on the display queue and/or main queue (MUST BE THREAD SAFE)
  */
-+ (UIImage *)displayWithParameters:(id<NSObject>)parameters
-                       isCancelled:(asdisplaynode_iscancelled_block_t)isCancelledBlock;
++ (UIImage *)displayWithParameters:(id<NSObject>)parameters isCancelled:(asdisplaynode_iscancelled_block_t)isCancelledBlock;
 
 /**
  * @abstract Delegate override for drawParameters
@@ -172,17 +147,16 @@
  */
 - (void)displayDidFinish;
 
-
 /**
- * @abstract Marks the receiver's bounds as needing to be redrawn, with a scale value.
+ * @abstract The scale factor to apply to the rendering.
  *
- * @discussion Subclasses should override this if they don't want their contentsScale changed.
+ * @discussion Use setNeedsDisplayAtScale: to set a value and then after display, the display node will set the layer's
+ * contentsScale. This is to prevent jumps when re-rasterizing at a different contentsScale.
+ * Read this property if you need to know the future contentsScale of your layer, eg in drawParameters.
  *
- * @note This changes an internal property.
- * -setNeedsDisplay is also available to trigger display without changing contentsScaleForDisplay.
- * @see contentsScaleForDisplay
+ * @see setNeedsDisplayAtScale:
  */
-- (void)setNeedsDisplayAtScale:(CGFloat)contentsScale;
+@property (nonatomic, assign) CGFloat contentsScaleForDisplay;
 
 /**
  * @abstract Recursively calls setNeedsDisplayAtScale: on subnodes.
@@ -194,11 +168,9 @@
  * @see setNeedsDisplayAtScale:
  * @see contentsScaleForDisplay
  */
-- (void)recursivelySetNeedsDisplayAtScale:(CGFloat)contentsScale;
-
+- (void)recursivelySetNeedsDisplay;
 
 /** @name Touch handling */
-
 
 /**
  * @abstract Tells the node when touches began in its view.
@@ -232,9 +204,7 @@
  */
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event;
 
-
 /** @name Managing Gesture Recognizers */
-
 
 /**
  * @abstract Asks the node if a gesture recognizer should continue tracking touches.
@@ -243,9 +213,7 @@
  */
 - (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer;
 
-
 /** @name Hit Testing */
-
 
 /**
  * @abstract Returns the view that contains the point.
@@ -262,9 +230,7 @@
  */
 - (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event;
 
-
 /** @name Observing node-related changes */
-
 
 // Called just before the view is added to a superview.
 - (void)willEnterHierarchy;
@@ -277,9 +243,7 @@
 // Base class implements self.contents = nil, clearing any backing store, for asynchronous regeneration when needed.
 - (void)reclaimMemory;
 
-
 /** @name Description */
-
 
 /**
  * @abstract Return a description of the node
@@ -290,11 +254,7 @@
 
 @end
 
-@interface ASDisplayNode (ASDisplayNodePrivate)
-// This method has proven helpful in a few rare scenarios, similar to a category extension on UIView,
-// but it's considered private API for now and its use should not be encouraged.
-- (ASDisplayNode *)_supernodeWithClass:(Class)supernodeClass;
-@end
-
-#define ASDisplayNodeAssertThreadAffinity(viewNode)   ASDisplayNodeAssert(!viewNode || ASDisplayNodeThreadIsMain() || !(viewNode).nodeLoaded, @"Incorrect display node thread affinity")
-#define ASDisplayNodeCAssertThreadAffinity(viewNode) ASDisplayNodeCAssert(!viewNode || ASDisplayNodeThreadIsMain() || !(viewNode).nodeLoaded, @"Incorrect display node thread affinity")
+#define ASDisplayNodeAssertThreadAffinity(viewNode) \
+    ASDisplayNodeAssert(!viewNode || ASDisplayNodeThreadIsMain() || !(viewNode).nodeLoaded, @"Incorrect display node thread affinity")
+#define ASDisplayNodeCAssertThreadAffinity(viewNode) \
+    ASDisplayNodeCAssert(!viewNode || ASDisplayNodeThreadIsMain() || !(viewNode).nodeLoaded, @"Incorrect display node thread affinity")

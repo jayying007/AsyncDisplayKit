@@ -14,11 +14,6 @@
 
 static void _transactionGroupRunLoopObserverCallback(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info);
 
-@interface _ASAsyncTransactionGroup ()
-+ (void)registerTransactionGroupAsMainRunloopObserver:(_ASAsyncTransactionGroup *)transactionGroup;
-- (void)commit;
-@end
-
 @implementation _ASAsyncTransactionGroup {
     NSHashTable *_containerLayers;
 }

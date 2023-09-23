@@ -27,7 +27,7 @@
 @property (nonatomic, assign) CGSize shadowOffset;
 @property (nonatomic, assign) CGFloat shadowRadius;
 @property (nonatomic, assign) CGFloat borderWidth;
-@property (nonatomic, assign, getter = isOpaque) BOOL opaque;
+@property (nonatomic, assign, getter=isOpaque) BOOL opaque;
 @property (nonatomic, retain) __attribute__((NSObject)) CGColorRef borderColor;
 @property (nonatomic, copy) NSString *asyncdisplaykit_name;
 @property (nonatomic, retain) __attribute__((NSObject)) CGColorRef backgroundColor;
@@ -44,16 +44,17 @@
  */
 @protocol ASDisplayNodeViewProperties
 
-@property (nonatomic, assign)                           BOOL clipsToBounds;
-@property (nonatomic, getter=isHidden)                  BOOL hidden;
-@property (nonatomic, assign)                           BOOL autoresizesSubviews;
-@property (nonatomic, assign)                           UIViewAutoresizing autoresizingMask;
-@property (nonatomic, assign)                           CGFloat alpha;
-@property (nonatomic, assign)                           CGRect bounds;
-@property (nonatomic, assign)                           UIViewContentMode contentMode;
+@property (nonatomic, assign) BOOL clipsToBounds;
+@property (nonatomic, getter=isHidden) BOOL hidden;
+@property (nonatomic, assign) BOOL autoresizesSubviews;
+@property (nonatomic, assign) UIViewAutoresizing autoresizingMask;
+@property (nonatomic, assign) CGFloat alpha;
+@property (nonatomic, assign) CGRect bounds;
+@property (nonatomic, assign) UIViewContentMode contentMode;
 @property (nonatomic, assign, getter=isUserInteractionEnabled) BOOL userInteractionEnabled;
 @property (nonatomic, assign, getter=isExclusiveTouch) BOOL exclusiveTouch;
-@property (nonatomic, assign, getter=asyncdisplaykit_isAsyncTransactionContainer, setter = asyncdisplaykit_setAsyncTransactionContainer:) BOOL asyncdisplaykit_asyncTransactionContainer;
+@property (nonatomic, assign, getter=asyncdisplaykit_isAsyncTransactionContainer, setter=asyncdisplaykit_setAsyncTransactionContainer:)
+BOOL asyncdisplaykit_asyncTransactionContainer;
 
 /**
  Following properties of the UIAccessibility informal protocol are supported as well.

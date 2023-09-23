@@ -14,37 +14,35 @@
 
 #import "_ASDisplayView.h"
 #import "ASDisplayNode+Subclasses.h"
-#import "ASDisplayNodeExtras.h"
 #import "UIView+ASConvenience.h"
+#import "ASDisplayNodeInternal.h"
 
 // helper functions
 IMP class_replaceMethodWithBlock(Class class, SEL originalSelector, id block);
-IMP class_replaceMethodWithBlock(Class class, SEL originalSelector, id block)
-{
-  IMP newImplementation = imp_implementationWithBlock(block);
-  Method method = class_getInstanceMethod(class, originalSelector);
-  return class_replaceMethod(class, originalSelector, newImplementation, method_getTypeEncoding(method));
+IMP class_replaceMethodWithBlock(Class class, SEL originalSelector, id block) {
+    IMP newImplementation = imp_implementationWithBlock(block);
+    Method method = class_getInstanceMethod(class, originalSelector);
+    return class_replaceMethod(class, originalSelector, newImplementation, method_getTypeEncoding(method));
 }
 
 static dispatch_block_t modifyMethodByAddingPrologueBlockAndReturnCleanupBlock(Class class, SEL originalSelector, id block);
-static dispatch_block_t modifyMethodByAddingPrologueBlockAndReturnCleanupBlock(Class class, SEL originalSelector, id block)
-{
-  __block IMP originalImp = NULL;
-  void (^blockCopied)(id) = [block copy];
-  void (^blockActualSwizzle)(id) = [^(id swizzedSelf){
-    blockCopied(swizzedSelf);
-    originalImp(swizzedSelf, originalSelector);
-  } copy];
-  originalImp = class_replaceMethodWithBlock(class, originalSelector, blockActualSwizzle);
-  void (^cleanupBlock)(void) = ^{
-    // restore original method
-    Method method = class_getInstanceMethod(class, originalSelector);
-    class_replaceMethod(class, originalSelector, originalImp, method_getTypeEncoding(method));
-    // release copied blocks
-    [blockCopied release];
-    [blockActualSwizzle release];
-  };
-  return [[cleanupBlock copy] autorelease];
+static dispatch_block_t modifyMethodByAddingPrologueBlockAndReturnCleanupBlock(Class class, SEL originalSelector, id block) {
+    __block IMP originalImp = NULL;
+    void (^blockCopied)(id) = [block copy];
+    void (^blockActualSwizzle)(id) = [^(id swizzedSelf) {
+        blockCopied(swizzedSelf);
+        originalImp(swizzedSelf, originalSelector);
+    } copy];
+    originalImp = class_replaceMethodWithBlock(class, originalSelector, blockActualSwizzle);
+    void (^cleanupBlock)(void) = ^{
+        // restore original method
+        Method method = class_getInstanceMethod(class, originalSelector);
+        class_replaceMethod(class, originalSelector, originalImp, method_getTypeEncoding(method));
+        // release copied blocks
+        [blockCopied release];
+        [blockActualSwizzle release];
+    };
+    return [[cleanupBlock copy] autorelease];
 }
 
 @interface ASDisplayNode (PrivateStuffSoWeDontPullInCPPInternalH)
@@ -54,374 +52,363 @@ static dispatch_block_t modifyMethodByAddingPrologueBlockAndReturnCleanupBlock(C
 @interface ASDisplayNodeAppearanceTests : XCTestCase
 @end
 
-#define DeclareNodeNamed(n) ASDisplayNode *n = [[ASDisplayNode alloc] init]; n.name = @#n
-#define DeclareViewNamed(v) UIView *v = [[UIView alloc] init]; v.layer.asyncdisplaykit_name = @#v
-#define DeclareLayerNamed(l) CALayer *l = [[CALayer alloc] init]; l.asyncdisplaykit_name = @#l
+#define DeclareNodeNamed(n)                          \
+    ASDisplayNode *n = [[ASDisplayNode alloc] init]; \
+    n.name = @ #n
+#define DeclareViewNamed(v)            \
+    UIView *v = [[UIView alloc] init]; \
+    v.layer.asyncdisplaykit_name = @ #v
+#define DeclareLayerNamed(l)             \
+    CALayer *l = [[CALayer alloc] init]; \
+    l.asyncdisplaykit_name = @ #l
 
-@implementation ASDisplayNodeAppearanceTests
-{
-  _ASDisplayView *_view;
+@implementation ASDisplayNodeAppearanceTests {
+    _ASDisplayView *_view;
 
-  NSMutableArray *_swizzleCleanupBlocks;
+    NSMutableArray *_swizzleCleanupBlocks;
 
-  NSCountedSet *_willEnterHierarchyCounts;
-  NSCountedSet *_didExitHierarchyCounts;
-
+    NSCountedSet *_willEnterHierarchyCounts;
+    NSCountedSet *_didExitHierarchyCounts;
 }
 
-- (void)setUp
-{
-  [super setUp];
+- (void)setUp {
+    [super setUp];
 
-  _swizzleCleanupBlocks = [[NSMutableArray alloc] init];
+    _swizzleCleanupBlocks = [[NSMutableArray alloc] init];
 
-  // Using this instead of mocks. Count # of times method called
-  _willEnterHierarchyCounts = [[NSCountedSet alloc] init];
-  _didExitHierarchyCounts = [[NSCountedSet alloc] init];
+    // Using this instead of mocks. Count # of times method called
+    _willEnterHierarchyCounts = [[NSCountedSet alloc] init];
+    _didExitHierarchyCounts = [[NSCountedSet alloc] init];
 
-  dispatch_block_t cleanupBlock = modifyMethodByAddingPrologueBlockAndReturnCleanupBlock([ASDisplayNode class], @selector(willEnterHierarchy), ^(id blockSelf){
-    [_willEnterHierarchyCounts addObject:blockSelf];
-  });
-  [_swizzleCleanupBlocks addObject:cleanupBlock];
-  cleanupBlock = modifyMethodByAddingPrologueBlockAndReturnCleanupBlock([ASDisplayNode class], @selector(didExitHierarchy), ^(id blockSelf){
-    [_didExitHierarchyCounts addObject:blockSelf];
-  });
-  [_swizzleCleanupBlocks addObject:cleanupBlock];
+    dispatch_block_t cleanupBlock =
+    modifyMethodByAddingPrologueBlockAndReturnCleanupBlock([ASDisplayNode class], @selector(willEnterHierarchy), ^(id blockSelf) {
+        [_willEnterHierarchyCounts addObject:blockSelf];
+    });
+    [_swizzleCleanupBlocks addObject:cleanupBlock];
+    cleanupBlock = modifyMethodByAddingPrologueBlockAndReturnCleanupBlock([ASDisplayNode class], @selector(didExitHierarchy), ^(id blockSelf) {
+        [_didExitHierarchyCounts addObject:blockSelf];
+    });
+    [_swizzleCleanupBlocks addObject:cleanupBlock];
 }
 
-- (void)tearDown
-{
-  [super tearDown];
+- (void)tearDown {
+    [super tearDown];
 
-  for(id cleanupBlock in _swizzleCleanupBlocks) {
-    void (^cleanupBlockCasted)(void) = cleanupBlock;
-    cleanupBlockCasted();
-  }
-  [_swizzleCleanupBlocks release];
-  _swizzleCleanupBlocks = nil;
+    for (id cleanupBlock in _swizzleCleanupBlocks) {
+        void (^cleanupBlockCasted)(void) = cleanupBlock;
+        cleanupBlockCasted();
+    }
+    [_swizzleCleanupBlocks release];
+    _swizzleCleanupBlocks = nil;
 
-  [_willEnterHierarchyCounts release];
-  _willEnterHierarchyCounts = nil;
-  [_didExitHierarchyCounts release];
-  _didExitHierarchyCounts = nil;
+    [_willEnterHierarchyCounts release];
+    _willEnterHierarchyCounts = nil;
+    [_didExitHierarchyCounts release];
+    _didExitHierarchyCounts = nil;
 }
 
-- (void)testAppearanceMethodsCalledWithRootNodeInWindowLayer
-{
-  [self checkAppearanceMethodsCalledWithRootNodeInWindowLayerBacked:YES];
+- (void)testAppearanceMethodsCalledWithRootNodeInWindowLayer {
+    [self checkAppearanceMethodsCalledWithRootNodeInWindowLayerBacked:YES];
 }
 
-- (void)testAppearanceMethodsCalledWithRootNodeInWindowView
-{
-  [self checkAppearanceMethodsCalledWithRootNodeInWindowLayerBacked:NO];
+- (void)testAppearanceMethodsCalledWithRootNodeInWindowView {
+    [self checkAppearanceMethodsCalledWithRootNodeInWindowLayerBacked:NO];
 }
 
-- (void)checkAppearanceMethodsCalledWithRootNodeInWindowLayerBacked:(BOOL)isLayerBacked
-{
-  // ASDisplayNode visibility does not change if modifying a hierarchy that is not in a window.  So create one and add the superview to it.
-  UIWindow *window = [[UIWindow alloc] initWithFrame:CGRectZero];
+- (void)checkAppearanceMethodsCalledWithRootNodeInWindowLayerBacked:(BOOL)isLayerBacked {
+    // ASDisplayNode visibility does not change if modifying a hierarchy that is not in a window.  So create one and add the superview to it.
+    UIWindow *window = [[UIWindow alloc] initWithFrame:CGRectZero];
 
-  DeclareNodeNamed(n);
-  DeclareViewNamed(superview);
+    DeclareNodeNamed(n);
+    DeclareViewNamed(superview);
 
-  n.layerBacked = isLayerBacked;
-
-  if (isLayerBacked) {
-    [superview.layer addSublayer:n.layer];
-  } else {
-    [superview addSubview:n.view];
-  }
-
-  XCTAssertEqual([_willEnterHierarchyCounts countForObject:n], 0u, @"willEnterHierarchy erroneously called");
-  XCTAssertEqual([_didExitHierarchyCounts countForObject:n], 0u, @"didExitHierarchy erroneously called");
-
-  [window addSubview:superview];
-  XCTAssertEqual([_willEnterHierarchyCounts countForObject:n], 1u, @"willEnterHierarchy not called when node's view added to hierarchy");
-  XCTAssertEqual([_didExitHierarchyCounts countForObject:n], 0u, @"didExitHierarchy erroneously called");
-
-  XCTAssertTrue(n.inWindow, @"Node should be visible");
-
-  if (isLayerBacked) {
-    [n.layer removeFromSuperlayer];
-  } else {
-    [n.view removeFromSuperview];
-  }
-
-  XCTAssertFalse(n.inWindow, @"Node should be not visible");
-
-  XCTAssertEqual([_willEnterHierarchyCounts countForObject:n], 1u, @"willEnterHierarchy not called when node's view added to hierarchy");
-  XCTAssertEqual([_didExitHierarchyCounts countForObject:n], 1u, @"didExitHierarchy erroneously called");
-
-  [superview release];
-  [window release];
-}
-
-- (void)checkManualAppearanceViewLoaded:(BOOL)isViewLoaded layerBacked:(BOOL)isLayerBacked
-{
-  // ASDisplayNode visibility does not change if modifying a hierarchy that is not in a window.  So create one and add the superview to it.
-  UIWindow *window = [[UIWindow alloc] initWithFrame:CGRectZero];
-
-  DeclareNodeNamed(parent);
-  DeclareNodeNamed(a);
-  DeclareNodeNamed(b);
-  DeclareNodeNamed(aa);
-  DeclareNodeNamed(ab);
-
-  for (ASDisplayNode *n in @[parent, a, b, aa, ab]) {
     n.layerBacked = isLayerBacked;
-    if (isViewLoaded)
-      [n layer];
-  }
 
-  [parent addSubnode:a];
+    if (isLayerBacked) {
+        [superview.layer addSublayer:n.layer];
+    } else {
+        [superview addSubview:n.view];
+    }
 
-  XCTAssertFalse(parent.inWindow, @"Nothing should be visible");
-  XCTAssertFalse(a.inWindow, @"Nothing should be visible");
-  XCTAssertFalse(b.inWindow, @"Nothing should be visible");
-  XCTAssertFalse(aa.inWindow, @"Nothing should be visible");
-  XCTAssertFalse(ab.inWindow, @"Nothing should be visible");
+    XCTAssertEqual([_willEnterHierarchyCounts countForObject:n], 0u, @"willEnterHierarchy erroneously called");
+    XCTAssertEqual([_didExitHierarchyCounts countForObject:n], 0u, @"didExitHierarchy erroneously called");
 
-  if (isLayerBacked) {
-    [window.layer addSublayer:parent.layer];
-  } else {
-    [window addSubview:parent.view];
-  }
+    [window addSubview:superview];
+    XCTAssertEqual([_willEnterHierarchyCounts countForObject:n], 1u, @"willEnterHierarchy not called when node's view added to hierarchy");
+    XCTAssertEqual([_didExitHierarchyCounts countForObject:n], 0u, @"didExitHierarchy erroneously called");
 
-  XCTAssertEqual([_willEnterHierarchyCounts countForObject:parent], 1u, @"Should have -willEnterHierarchy called once");
-  XCTAssertEqual([_willEnterHierarchyCounts countForObject:a], 1u, @"Should have -willEnterHierarchy called once");
-  XCTAssertEqual([_willEnterHierarchyCounts countForObject:b], 0u, @"Should not have appeared yet");
-  XCTAssertEqual([_willEnterHierarchyCounts countForObject:aa], 0u, @"Should not have appeared yet");
-  XCTAssertEqual([_willEnterHierarchyCounts countForObject:ab], 0u, @"Should not have appeared yet");
+    XCTAssertTrue(n.inWindow, @"Node should be visible");
 
-  XCTAssertTrue(parent.inWindow, @"Should be visible");
-  XCTAssertTrue(a.inWindow, @"Should be visible");
-  XCTAssertFalse(b.inWindow, @"Nothing should be visible");
-  XCTAssertFalse(aa.inWindow, @"Nothing should be visible");
-  XCTAssertFalse(ab.inWindow, @"Nothing should be visible");
+    if (isLayerBacked) {
+        [n.layer removeFromSuperlayer];
+    } else {
+        [n.view removeFromSuperview];
+    }
 
-  // Add to an already-visible node should make the node visible
-  [parent addSubnode:b];
-  [a insertSubnode:aa atIndex:0];
-  [a insertSubnode:ab aboveSubnode:aa];
+    XCTAssertFalse(n.inWindow, @"Node should be not visible");
 
-  XCTAssertTrue(parent.inWindow, @"Should be visible");
-  XCTAssertTrue(a.inWindow, @"Should be visible");
-  XCTAssertTrue(b.inWindow, @"Should be visible after adding to visible parent");
-  XCTAssertTrue(aa.inWindow, @"Nothing should be visible");
-  XCTAssertTrue(ab.inWindow, @"Nothing should be visible");
+    XCTAssertEqual([_willEnterHierarchyCounts countForObject:n], 1u, @"willEnterHierarchy not called when node's view added to hierarchy");
+    XCTAssertEqual([_didExitHierarchyCounts countForObject:n], 1u, @"didExitHierarchy erroneously called");
 
-  XCTAssertEqual([_willEnterHierarchyCounts countForObject:parent], 1u, @"Should have -willEnterHierarchy called once");
-  XCTAssertEqual([_willEnterHierarchyCounts countForObject:a], 1u, @"Should have -willEnterHierarchy called once");
-  XCTAssertEqual([_willEnterHierarchyCounts countForObject:b], 1u, @"Should have -willEnterHierarchy called once");
-  XCTAssertEqual([_willEnterHierarchyCounts countForObject:aa], 1u, @"Should have -willEnterHierarchy called once");
-  XCTAssertEqual([_willEnterHierarchyCounts countForObject:ab], 1u, @"Should have -willEnterHierarchy called once");
-
-  if (isLayerBacked) {
-    [parent.layer removeFromSuperlayer];
-  } else {
-    [parent.view removeFromSuperview];
-  }
-
-  XCTAssertFalse(parent.inWindow, @"Nothing should be visible");
-  XCTAssertFalse(a.inWindow, @"Nothing should be visible");
-  XCTAssertFalse(b.inWindow, @"Nothing should be visible");
-  XCTAssertFalse(aa.inWindow, @"Nothing should be visible");
-  XCTAssertFalse(ab.inWindow, @"Nothing should be visible");
+    [superview release];
+    [window release];
 }
 
-- (void)testAppearanceMethodsNoLayer
-{
-  [self checkManualAppearanceViewLoaded:NO layerBacked:YES];
+- (void)checkManualAppearanceViewLoaded:(BOOL)isViewLoaded layerBacked:(BOOL)isLayerBacked {
+    // ASDisplayNode visibility does not change if modifying a hierarchy that is not in a window.  So create one and add the superview to it.
+    UIWindow *window = [[UIWindow alloc] initWithFrame:CGRectZero];
+
+    DeclareNodeNamed(parent);
+    DeclareNodeNamed(a);
+    DeclareNodeNamed(b);
+    DeclareNodeNamed(aa);
+    DeclareNodeNamed(ab);
+
+    for (ASDisplayNode *n in @[ parent, a, b, aa, ab ]) {
+        n.layerBacked = isLayerBacked;
+        if (isViewLoaded)
+            [n layer];
+    }
+
+    [parent addSubnode:a];
+
+    XCTAssertFalse(parent.inWindow, @"Nothing should be visible");
+    XCTAssertFalse(a.inWindow, @"Nothing should be visible");
+    XCTAssertFalse(b.inWindow, @"Nothing should be visible");
+    XCTAssertFalse(aa.inWindow, @"Nothing should be visible");
+    XCTAssertFalse(ab.inWindow, @"Nothing should be visible");
+
+    if (isLayerBacked) {
+        [window.layer addSublayer:parent.layer];
+    } else {
+        [window addSubview:parent.view];
+    }
+
+    XCTAssertEqual([_willEnterHierarchyCounts countForObject:parent], 1u, @"Should have -willEnterHierarchy called once");
+    XCTAssertEqual([_willEnterHierarchyCounts countForObject:a], 1u, @"Should have -willEnterHierarchy called once");
+    XCTAssertEqual([_willEnterHierarchyCounts countForObject:b], 0u, @"Should not have appeared yet");
+    XCTAssertEqual([_willEnterHierarchyCounts countForObject:aa], 0u, @"Should not have appeared yet");
+    XCTAssertEqual([_willEnterHierarchyCounts countForObject:ab], 0u, @"Should not have appeared yet");
+
+    XCTAssertTrue(parent.inWindow, @"Should be visible");
+    XCTAssertTrue(a.inWindow, @"Should be visible");
+    XCTAssertFalse(b.inWindow, @"Nothing should be visible");
+    XCTAssertFalse(aa.inWindow, @"Nothing should be visible");
+    XCTAssertFalse(ab.inWindow, @"Nothing should be visible");
+
+    // Add to an already-visible node should make the node visible
+    [parent addSubnode:b];
+    [a insertSubnode:aa atIndex:0];
+    [a insertSubnode:ab aboveSubnode:aa];
+
+    XCTAssertTrue(parent.inWindow, @"Should be visible");
+    XCTAssertTrue(a.inWindow, @"Should be visible");
+    XCTAssertTrue(b.inWindow, @"Should be visible after adding to visible parent");
+    XCTAssertTrue(aa.inWindow, @"Nothing should be visible");
+    XCTAssertTrue(ab.inWindow, @"Nothing should be visible");
+
+    XCTAssertEqual([_willEnterHierarchyCounts countForObject:parent], 1u, @"Should have -willEnterHierarchy called once");
+    XCTAssertEqual([_willEnterHierarchyCounts countForObject:a], 1u, @"Should have -willEnterHierarchy called once");
+    XCTAssertEqual([_willEnterHierarchyCounts countForObject:b], 1u, @"Should have -willEnterHierarchy called once");
+    XCTAssertEqual([_willEnterHierarchyCounts countForObject:aa], 1u, @"Should have -willEnterHierarchy called once");
+    XCTAssertEqual([_willEnterHierarchyCounts countForObject:ab], 1u, @"Should have -willEnterHierarchy called once");
+
+    if (isLayerBacked) {
+        [parent.layer removeFromSuperlayer];
+    } else {
+        [parent.view removeFromSuperview];
+    }
+
+    XCTAssertFalse(parent.inWindow, @"Nothing should be visible");
+    XCTAssertFalse(a.inWindow, @"Nothing should be visible");
+    XCTAssertFalse(b.inWindow, @"Nothing should be visible");
+    XCTAssertFalse(aa.inWindow, @"Nothing should be visible");
+    XCTAssertFalse(ab.inWindow, @"Nothing should be visible");
 }
 
-- (void)testAppearanceMethodsNoView
-{
-  [self checkManualAppearanceViewLoaded:NO layerBacked:NO];
+- (void)testAppearanceMethodsNoLayer {
+    [self checkManualAppearanceViewLoaded:NO layerBacked:YES];
 }
 
-- (void)testAppearanceMethodsLayer
-{
-  [self checkManualAppearanceViewLoaded:YES layerBacked:YES];
+- (void)testAppearanceMethodsNoView {
+    [self checkManualAppearanceViewLoaded:NO layerBacked:NO];
 }
 
-- (void)testAppearanceMethodsView
-{
-  [self checkManualAppearanceViewLoaded:YES layerBacked:NO];
+- (void)testAppearanceMethodsLayer {
+    [self checkManualAppearanceViewLoaded:YES layerBacked:YES];
 }
 
-- (void)testSynchronousIntermediaryView
-{
-  // Parent is a wrapper node for a scrollview
-  ASDisplayNode *parentSynchronousNode = [[ASDisplayNode alloc] initWithViewClass:[UIScrollView class]];
-  DeclareNodeNamed(layerBackedNode);
-  DeclareNodeNamed(viewBackedNode);
-
-  layerBackedNode.layerBacked = YES;
-
-  UIWindow *window = [[UIWindow alloc] initWithFrame:CGRectZero];
-  [parentSynchronousNode addSubnode:layerBackedNode];
-  [parentSynchronousNode addSubnode:viewBackedNode];
-
-  XCTAssertFalse(parentSynchronousNode.inWindow, @"Should not yet be visible");
-  XCTAssertFalse(layerBackedNode.inWindow, @"Should not yet be visible");
-  XCTAssertFalse(viewBackedNode.inWindow, @"Should not yet be visible");
-
-  [window addSubview:parentSynchronousNode.view];
-
-  // This is a known case that isn't supported
-  XCTAssertFalse(parentSynchronousNode.inWindow, @"Synchronous views are not currently marked visible");
-
-  XCTAssertTrue(layerBackedNode.inWindow, @"Synchronous views' subviews should get marked visible");
-  XCTAssertTrue(viewBackedNode.inWindow, @"Synchronous views' subviews should get marked visible");
-
-  // Try moving a node to/from a synchronous node in the window with the node API
-  // Setup
-  [layerBackedNode removeFromSupernode];
-  [viewBackedNode removeFromSupernode];
-  XCTAssertFalse(layerBackedNode.inWindow, @"aoeu");
-  XCTAssertFalse(viewBackedNode.inWindow, @"aoeu");
-
-  // now move to synchronous node
-  [parentSynchronousNode addSubnode:layerBackedNode];
-  [parentSynchronousNode insertSubnode:viewBackedNode aboveSubnode:layerBackedNode];
-  XCTAssertTrue(layerBackedNode.inWindow, @"Synchronous views' subviews should get marked visible");
-  XCTAssertTrue(viewBackedNode.inWindow, @"Synchronous views' subviews should get marked visible");
-
-  [parentSynchronousNode.view removeFromSuperview];
-
-  XCTAssertFalse(parentSynchronousNode.inWindow, @"Should not have changed");
-  XCTAssertFalse(layerBackedNode.inWindow, @"Should have been marked invisible when synchronous superview was removed from the window");
-  XCTAssertFalse(viewBackedNode.inWindow, @"Should have been marked invisible when synchronous superview was removed from the window");
-
-  [window release];
-  [parentSynchronousNode release];
-  [layerBackedNode release];
-  [viewBackedNode release];
+- (void)testAppearanceMethodsView {
+    [self checkManualAppearanceViewLoaded:YES layerBacked:NO];
 }
 
-- (void)checkMoveAcrossHierarchyLayerBacked:(BOOL)isLayerBacked useManualCalls:(BOOL)useManualDisable useNodeAPI:(BOOL)useNodeAPI
-{
-  UIWindow *window = [[UIWindow alloc] initWithFrame:CGRectZero];
+- (void)testSynchronousIntermediaryView {
+    // Parent is a wrapper node for a scrollview
+    ASDisplayNode *parentSynchronousNode = [[ASDisplayNode alloc] initWithViewClass:[UIScrollView class]];
+    DeclareNodeNamed(layerBackedNode);
+    DeclareNodeNamed(viewBackedNode);
 
-  DeclareNodeNamed(parentA);
-  DeclareNodeNamed(parentB);
-  DeclareNodeNamed(child);
-  DeclareNodeNamed(childSubnode);
+    layerBackedNode.layerBacked = YES;
 
-  for (ASDisplayNode *n in @[parentA, parentB, child, childSubnode]) {
-    n.layerBacked = isLayerBacked;
-  }
+    UIWindow *window = [[UIWindow alloc] initWithFrame:CGRectZero];
+    [parentSynchronousNode addSubnode:layerBackedNode];
+    [parentSynchronousNode addSubnode:viewBackedNode];
 
-  [parentA addSubnode:child];
-  [child addSubnode:childSubnode];
+    XCTAssertFalse(parentSynchronousNode.inWindow, @"Should not yet be visible");
+    XCTAssertFalse(layerBackedNode.inWindow, @"Should not yet be visible");
+    XCTAssertFalse(viewBackedNode.inWindow, @"Should not yet be visible");
 
-  XCTAssertFalse(parentA.inWindow, @"Should not yet be visible");
-  XCTAssertFalse(parentB.inWindow, @"Should not yet be visible");
-  XCTAssertFalse(child.inWindow, @"Should not yet be visible");
-  XCTAssertFalse(childSubnode.inWindow, @"Should not yet be visible");
-  XCTAssertFalse(childSubnode.inWindow, @"Should not yet be visible");
+    [window addSubview:parentSynchronousNode.view];
 
-  XCTAssertEqual([_willEnterHierarchyCounts countForObject:child], 0u, @"Should not have -willEnterHierarchy called");
-  XCTAssertEqual([_willEnterHierarchyCounts countForObject:childSubnode], 0u, @"Should not have -willEnterHierarchy called");
+    // This is a known case that isn't supported
+    XCTAssertFalse(parentSynchronousNode.inWindow, @"Synchronous views are not currently marked visible");
 
-  if (isLayerBacked) {
-    [window.layer addSublayer:parentA.layer];
-    [window.layer addSublayer:parentB.layer];
-  } else {
-    [window addSubview:parentA.view];
-    [window addSubview:parentB.view];
-  }
+    XCTAssertTrue(layerBackedNode.inWindow, @"Synchronous views' subviews should get marked visible");
+    XCTAssertTrue(viewBackedNode.inWindow, @"Synchronous views' subviews should get marked visible");
 
-  XCTAssertTrue(parentA.inWindow, @"Should be visible after added to window");
-  XCTAssertTrue(parentB.inWindow, @"Should be visible after added to window");
-  XCTAssertTrue(child.inWindow, @"Should be visible after parent added to window");
-  XCTAssertTrue(childSubnode.inWindow, @"Should be visible after parent added to window");
+    // Try moving a node to/from a synchronous node in the window with the node API
+    // Setup
+    [layerBackedNode removeFromSupernode];
+    [viewBackedNode removeFromSupernode];
+    XCTAssertFalse(layerBackedNode.inWindow, @"aoeu");
+    XCTAssertFalse(viewBackedNode.inWindow, @"aoeu");
 
-  XCTAssertEqual([_willEnterHierarchyCounts countForObject:child], 1u, @"Should have -willEnterHierarchy called once");
-  XCTAssertEqual([_willEnterHierarchyCounts countForObject:childSubnode], 1u, @"Should have -willEnterHierarchy called once");
+    // now move to synchronous node
+    [parentSynchronousNode addSubnode:layerBackedNode];
+    [parentSynchronousNode insertSubnode:viewBackedNode aboveSubnode:layerBackedNode];
+    XCTAssertTrue(layerBackedNode.inWindow, @"Synchronous views' subviews should get marked visible");
+    XCTAssertTrue(viewBackedNode.inWindow, @"Synchronous views' subviews should get marked visible");
 
-  // Move subnode from A to B
-  if (useManualDisable) {
-    ASDisplayNodeDisableHierarchyNotifications(child);
-  }
-  if (!useNodeAPI) {
+    [parentSynchronousNode.view removeFromSuperview];
+
+    XCTAssertFalse(parentSynchronousNode.inWindow, @"Should not have changed");
+    XCTAssertFalse(layerBackedNode.inWindow, @"Should have been marked invisible when synchronous superview was removed from the window");
+    XCTAssertFalse(viewBackedNode.inWindow, @"Should have been marked invisible when synchronous superview was removed from the window");
+
+    [window release];
+    [parentSynchronousNode release];
+    [layerBackedNode release];
+    [viewBackedNode release];
+}
+
+- (void)checkMoveAcrossHierarchyLayerBacked:(BOOL)isLayerBacked useManualCalls:(BOOL)useManualDisable useNodeAPI:(BOOL)useNodeAPI {
+    UIWindow *window = [[UIWindow alloc] initWithFrame:CGRectZero];
+
+    DeclareNodeNamed(parentA);
+    DeclareNodeNamed(parentB);
+    DeclareNodeNamed(child);
+    DeclareNodeNamed(childSubnode);
+
+    for (ASDisplayNode *n in @[ parentA, parentB, child, childSubnode ]) {
+        n.layerBacked = isLayerBacked;
+    }
+
+    [parentA addSubnode:child];
+    [child addSubnode:childSubnode];
+
+    XCTAssertFalse(parentA.inWindow, @"Should not yet be visible");
+    XCTAssertFalse(parentB.inWindow, @"Should not yet be visible");
+    XCTAssertFalse(child.inWindow, @"Should not yet be visible");
+    XCTAssertFalse(childSubnode.inWindow, @"Should not yet be visible");
+    XCTAssertFalse(childSubnode.inWindow, @"Should not yet be visible");
+
+    XCTAssertEqual([_willEnterHierarchyCounts countForObject:child], 0u, @"Should not have -willEnterHierarchy called");
+    XCTAssertEqual([_willEnterHierarchyCounts countForObject:childSubnode], 0u, @"Should not have -willEnterHierarchy called");
+
+    if (isLayerBacked) {
+        [window.layer addSublayer:parentA.layer];
+        [window.layer addSublayer:parentB.layer];
+    } else {
+        [window addSubview:parentA.view];
+        [window addSubview:parentB.view];
+    }
+
+    XCTAssertTrue(parentA.inWindow, @"Should be visible after added to window");
+    XCTAssertTrue(parentB.inWindow, @"Should be visible after added to window");
+    XCTAssertTrue(child.inWindow, @"Should be visible after parent added to window");
+    XCTAssertTrue(childSubnode.inWindow, @"Should be visible after parent added to window");
+
+    XCTAssertEqual([_willEnterHierarchyCounts countForObject:child], 1u, @"Should have -willEnterHierarchy called once");
+    XCTAssertEqual([_willEnterHierarchyCounts countForObject:childSubnode], 1u, @"Should have -willEnterHierarchy called once");
+
+    // Move subnode from A to B
+    if (useManualDisable) {
+        [child __incrementVisibilityNotificationsDisabled];
+    }
+    if (!useNodeAPI) {
+        [child removeFromSupernode];
+        [parentB addSubnode:child];
+    } else {
+        [parentB addSubnode:child];
+    }
+    if (useManualDisable) {
+        XCTAssertTrue([child __visibilityNotificationsDisabled], @"Should not have re-enabled yet");
+        [child __decrementVisibilityNotificationsDisabled];
+    }
+
+    XCTAssertEqual([_willEnterHierarchyCounts countForObject:child],
+                   1u,
+                   @"Should not have -willEnterHierarchy called when moving child around in hierarchy");
+
+    // Move subnode back to A
+    if (useManualDisable) {
+        [child __incrementVisibilityNotificationsDisabled];
+    }
+    if (!useNodeAPI) {
+        [child removeFromSupernode];
+        [parentA insertSubnode:child atIndex:0];
+    } else {
+        [parentA insertSubnode:child atIndex:0];
+    }
+    if (useManualDisable) {
+        XCTAssertTrue([child __visibilityNotificationsDisabled], @"Should not have re-enabled yet");
+        [child __decrementVisibilityNotificationsDisabled];
+    }
+
+    XCTAssertEqual([_willEnterHierarchyCounts countForObject:child],
+                   1u,
+                   @"Should not have -willEnterHierarchy called when moving child around in hierarchy");
+
+    // Finally, remove subnode
     [child removeFromSupernode];
-    [parentB addSubnode:child];
-  } else {
-    [parentB addSubnode:child];
-  }
-  if (useManualDisable) {
-    XCTAssertTrue([child __visibilityNotificationsDisabled], @"Should not have re-enabled yet");
-    ASDisplayNodeEnableHierarchyNotifications(child);
-  }
 
-  XCTAssertEqual([_willEnterHierarchyCounts countForObject:child], 1u, @"Should not have -willEnterHierarchy called when moving child around in hierarchy");
+    XCTAssertEqual([_willEnterHierarchyCounts countForObject:child], 1u, @"Should appear and disappear just once");
 
-  // Move subnode back to A
-  if (useManualDisable) {
-    ASDisplayNodeDisableHierarchyNotifications(child);
-  }
-  if (!useNodeAPI) {
-    [child removeFromSupernode];
-    [parentA insertSubnode:child atIndex:0];
-  } else {
-    [parentA insertSubnode:child atIndex:0];
-  }
-  if (useManualDisable) {
-    XCTAssertTrue([child __visibilityNotificationsDisabled], @"Should not have re-enabled yet");
-    ASDisplayNodeEnableHierarchyNotifications(child);
-  }
+    // Make sure that we don't leave these unbalanced
+    XCTAssertFalse([child __visibilityNotificationsDisabled], @"Unbalanced visibility notifications calls");
 
-
-  XCTAssertEqual([_willEnterHierarchyCounts countForObject:child], 1u, @"Should not have -willEnterHierarchy called when moving child around in hierarchy");
-
-  // Finally, remove subnode
-  [child removeFromSupernode];
-
-  XCTAssertEqual([_willEnterHierarchyCounts countForObject:child], 1u, @"Should appear and disappear just once");
-
-  // Make sure that we don't leave these unbalanced
-  XCTAssertFalse([child __visibilityNotificationsDisabled], @"Unbalanced visibility notifications calls");
-
-  [window release];
+    [window release];
 }
 
-- (void)testMoveAcrossHierarchyLayer
-{
-  [self checkMoveAcrossHierarchyLayerBacked:YES useManualCalls:NO useNodeAPI:YES];
+- (void)testMoveAcrossHierarchyLayer {
+    [self checkMoveAcrossHierarchyLayerBacked:YES useManualCalls:NO useNodeAPI:YES];
 }
 
-- (void)testMoveAcrossHierarchyView
-{
-  [self checkMoveAcrossHierarchyLayerBacked:NO useManualCalls:NO useNodeAPI:YES];
+- (void)testMoveAcrossHierarchyView {
+    [self checkMoveAcrossHierarchyLayerBacked:NO useManualCalls:NO useNodeAPI:YES];
 }
 
-- (void)testMoveAcrossHierarchyManualLayer
-{
-  [self checkMoveAcrossHierarchyLayerBacked:YES useManualCalls:YES useNodeAPI:NO];
+- (void)testMoveAcrossHierarchyManualLayer {
+    [self checkMoveAcrossHierarchyLayerBacked:YES useManualCalls:YES useNodeAPI:NO];
 }
 
-- (void)testMoveAcrossHierarchyManualView
-{
-  [self checkMoveAcrossHierarchyLayerBacked:NO useManualCalls:YES useNodeAPI:NO];
+- (void)testMoveAcrossHierarchyManualView {
+    [self checkMoveAcrossHierarchyLayerBacked:NO useManualCalls:YES useNodeAPI:NO];
 }
 
-- (void)testDisableWithNodeAPILayer
-{
-  [self checkMoveAcrossHierarchyLayerBacked:YES useManualCalls:YES useNodeAPI:YES];
+- (void)testDisableWithNodeAPILayer {
+    [self checkMoveAcrossHierarchyLayerBacked:YES useManualCalls:YES useNodeAPI:YES];
 }
 
-- (void)testDisableWithNodeAPIView
-{
-  [self checkMoveAcrossHierarchyLayerBacked:NO useManualCalls:YES useNodeAPI:YES];
+- (void)testDisableWithNodeAPIView {
+    [self checkMoveAcrossHierarchyLayerBacked:NO useManualCalls:YES useNodeAPI:YES];
 }
 
-- (void)testPreventManualAppearanceMethods
-{
-  DeclareNodeNamed(n);
+- (void)testPreventManualAppearanceMethods {
+    DeclareNodeNamed(n);
 
-  XCTAssertThrows([n willEnterHierarchy], @"Should not allow manually calling appearance methods.");
-  XCTAssertThrows([n didExitHierarchy], @"Should not allow manually calling appearance methods.");
+    XCTAssertThrows([n willEnterHierarchy], @"Should not allow manually calling appearance methods.");
+    XCTAssertThrows([n didExitHierarchy], @"Should not allow manually calling appearance methods.");
 }
 
 @end

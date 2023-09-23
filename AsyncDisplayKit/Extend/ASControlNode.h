@@ -12,17 +12,16 @@
   @abstract Kinds of events possible for control nodes.
   @discussion These events are identical to their UIControl counterparts.
  */
-enum _ASControlNodeEvent
-{
-  ASControlNodeEventTouchDown         = 1 << 0,
-  ASControlNodeEventTouchDownRepeat   = 1 << 1,
-  ASControlNodeEventTouchDragInside   = 1 << 2,
-  ASControlNodeEventTouchDragOutside  = 1 << 3,
-  ASControlNodeEventTouchUpInside     = 1 << 4,
-  ASControlNodeEventTouchUpOutside    = 1 << 5,
-  ASControlNodeEventTouchCancel       = 1 << 6,
+enum _ASControlNodeEvent {
+    ASControlNodeEventTouchDown = 1 << 0,
+    ASControlNodeEventTouchDownRepeat = 1 << 1,
+    ASControlNodeEventTouchDragInside = 1 << 2,
+    ASControlNodeEventTouchDragOutside = 1 << 3,
+    ASControlNodeEventTouchUpInside = 1 << 4,
+    ASControlNodeEventTouchUpOutside = 1 << 5,
+    ASControlNodeEventTouchCancel = 1 << 6,
 
-  ASControlNodeEventAllEvents         = 0xFFFFFFFF
+    ASControlNodeEventAllEvents = 0xFFFFFFFF
 };
 typedef NSUInteger ASControlNodeEvent;
 

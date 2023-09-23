@@ -11,13 +11,12 @@
 #import <AsyncDisplayKit/ASCellNode.h>
 
 typedef struct {
-  // working range buffers, on either side of scroll
-  NSInteger trailingBufferScreenfuls;
-  NSInteger leadingBufferScreenfuls;
+    // working range buffers, on either side of scroll
+    NSInteger trailingBufferScreenfuls;
+    NSInteger leadingBufferScreenfuls;
 } ASRangeTuningParameters;
 
 @protocol ASRangeControllerDelegate;
-
 
 /**
  * Working range controller.
@@ -83,7 +82,6 @@ typedef struct {
 @property (nonatomic, assign) ASRangeTuningParameters tuningParameters;
 
 @end
-
 
 @protocol ASRangeControllerDelegate <NSObject>
 

@@ -14,7 +14,6 @@
 
 @end
 
-
 @interface ASTextCellNode : ASCellNode
 
 @property (nonatomic, copy) NSString *text;

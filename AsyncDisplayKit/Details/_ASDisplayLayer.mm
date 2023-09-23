@@ -31,8 +31,6 @@
 
 - (id)init {
     if ((self = [super init])) {
-        _displaySentinel = [[ASSentinel alloc] init];
-
         self.opaque = YES;
 
 #if DEBUG
@@ -165,35 +163,18 @@
 }
 
 - (void)display:(BOOL)asynchronously {
-    [self _performBlockWithAsyncDelegate:^(id<_ASDisplayLayerDelegate> asyncDelegate) {
-        [asyncDelegate displayAsyncLayer:self asynchronously:asynchronously];
-    }];
+    [_asyncDelegate displayAsyncLayer:self asynchronously:asynchronously];
 }
 
 - (void)cancelAsyncDisplay {
     ASDisplayNodeAssertMainThread();
-    [_displaySentinel increment];
-    [self _performBlockWithAsyncDelegate:^(id<_ASDisplayLayerDelegate> asyncDelegate) {
-        [asyncDelegate cancelDisplayAsyncLayer:self];
-    }];
+    [_asyncDelegate cancelDisplayAsyncLayer:self];
 }
 
 - (NSString *)description {
     // The standard UIView description is useless for debugging because all ASDisplayNode subclasses have _ASDisplayView-type views.
     // This allows us to at least see the name of the node subclass and get its pointer directly from [[UIWindow keyWindow] recursiveDescription].
     return [NSString stringWithFormat:@"<%@, layer = %@>", self.asyncdisplaykit_node, [super description]];
-}
-
-#pragma mark -
-#pragma mark Helper Methods
-
-- (void)_performBlockWithAsyncDelegate:(void (^)(id<_ASDisplayLayerDelegate> asyncDelegate))block {
-    id<_ASDisplayLayerDelegate> __attribute__((objc_precise_lifetime)) strongAsyncDelegate;
-    {
-        ASDN::MutexLocker l(_asyncDelegateLock);
-        strongAsyncDelegate = _asyncDelegate;
-    }
-    block(strongAsyncDelegate);
 }
 
 @end

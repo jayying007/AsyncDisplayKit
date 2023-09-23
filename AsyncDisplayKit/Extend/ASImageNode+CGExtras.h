@@ -12,7 +12,6 @@
 
 ASDISPLAYNODE_EXTERN_C_BEGIN
 
-
 /**
  @abstract Decides how to scale and crop an image to fit in the provided size, while not wasting memory by upscaling images
  @param sourceImageSize The size of the encoded image.
@@ -21,12 +20,7 @@ ASDISPLAYNODE_EXTERN_C_BEGIN
  @param cropRect A rectangle that is to be featured by the cropped image. The rectangle is specified as a "unit rectangle," using percentages of the source image's width and height, e.g. CGRectMake(0.5, 0, 0.5, 1.0) will feature the full right half a photo. If the cropRect is empty, the contentMode will be used to determine the drawRect's size, and only the cropRect's origin will be used for positioning.
  @discussion If the image is smaller than the size and UIViewContentModeScaleToAspectFill is specified, we suggest the input size so it will be efficiently upscaled on the GPU by the displaying layer at composite time.
  */
-extern void ASCroppedImageBackingSizeAndDrawRectInBounds(CGSize sourceImageSize,
-                                                         CGSize boundsSize,
-                                                         UIViewContentMode contentMode,
-                                                         CGRect cropRect,
-                                                         CGSize *outBackingSize,
-                                                         CGRect *outDrawRect
-                                                         );
+extern void ASCroppedImageBackingSizeAndDrawRectInBounds(
+CGSize sourceImageSize, CGSize boundsSize, UIViewContentMode contentMode, CGRect cropRect, CGSize *outBackingSize, CGRect *outDrawRect);
 
 ASDISPLAYNODE_EXTERN_C_END

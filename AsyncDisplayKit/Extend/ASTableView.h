@@ -15,7 +15,6 @@
 @protocol ASTableViewDataSource;
 @protocol ASTableViewDelegate;
 
-
 /**
  * Node-based table view.
  *
@@ -75,7 +74,6 @@
 
 @end
 
-
 /**
  * This is a node-based UITableViewDataSource.
  */
@@ -92,7 +90,6 @@
 
 @end
 
-
 /**
  * This is a node-based UITableViewDelegate.
  *
@@ -104,6 +101,6 @@
 @optional
 
 - (void)tableView:(UITableView *)tableView willDisplayNodeForRowAtIndexPath:(NSIndexPath *)indexPath;
-- (void)tableView:(UITableView *)tableView didEndDisplayingNodeForRowAtIndexPath:(NSIndexPath*)indexPath;
+- (void)tableView:(UITableView *)tableView didEndDisplayingNodeForRowAtIndexPath:(NSIndexPath *)indexPath;
 
 @end

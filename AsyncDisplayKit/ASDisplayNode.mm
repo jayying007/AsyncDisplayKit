@@ -16,7 +16,6 @@
 #import "_ASPendingState.h"
 #import "_ASDisplayView.h"
 #import "_ASScopeTimer.h"
-#import "ASDisplayNodeExtras.h"
 
 @interface ASDisplayNode () <UIGestureRecognizerDelegate, CALayerDelegate>
 
@@ -46,21 +45,6 @@ BOOL ASDisplayNodeSubclassOverridesSelector(Class subclass, SEL selector) {
     return (superclassIMP != subclassIMP);
 }
 
-CGFloat ASDisplayNodeScreenScale() {
-    static CGFloat screenScale = 0.0;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        if ([NSThread isMainThread]) {
-            screenScale = [[UIScreen mainScreen] scale];
-        } else {
-            dispatch_sync(dispatch_get_main_queue(), ^{
-                screenScale = [[UIScreen mainScreen] scale];
-            });
-        }
-    });
-    return screenScale;
-}
-
 + (void)initialize {
     if (self == [ASDisplayNode class]) {
         return;
@@ -78,10 +62,6 @@ CGFloat ASDisplayNodeScreenScale() {
                         NSStringFromClass(self));
 }
 
-+ (BOOL)layerBackedNodesEnabled {
-    return YES;
-}
-
 + (Class)viewClass {
     return [_ASDisplayView class];
 }
@@ -94,7 +74,7 @@ CGFloat ASDisplayNodeScreenScale() {
 
 // Avoid recursive loops if a subclass implements an init method that calls -initWith*Class:
 - (void)_initializeInstance {
-    _contentsScaleForDisplay = ASDisplayNodeScreenScale();
+    _contentsScaleForDisplay = [[UIScreen mainScreen] scale];
 
     _displaySentinel = [[ASSentinel alloc] init];
 
@@ -169,15 +149,8 @@ CGFloat ASDisplayNodeScreenScale() {
 
     [self __setSupernode:nil];
     _pendingViewState = nil;
-    _replaceAsyncSentinel = nil;
 
     _displaySentinel = nil;
-}
-
-#pragma mark - UIResponder overrides
-
-- (UIResponder *)nextResponder {
-    return self.view.superview;
 }
 
 #pragma mark - Core
@@ -274,11 +247,6 @@ CGFloat ASDisplayNodeScreenScale() {
     return _layer;
 }
 
-// Returns nil if our view is not an _ASDisplayView, but will create it if necessary.
-- (_ASDisplayView *)ensureAsyncView {
-    return _flags.isSynchronous ? nil : (_ASDisplayView *)self.view;
-}
-
 // Returns nil if the layer is not an _ASDisplayLayer; will not create the view if nil
 - (_ASDisplayLayer *)asyncLayer {
     ASDN::MutexLocker l(_propertyLock);
@@ -299,9 +267,6 @@ CGFloat ASDisplayNodeScreenScale() {
 }
 
 - (void)setLayerBacked:(BOOL)isLayerBacked {
-    if (![self.class layerBackedNodesEnabled])
-        return;
-
     ASDN::MutexLocker l(_propertyLock);
     ASDisplayNodeAssert(!_view && !_layer, @"Cannot change isLayerBacked after layer or view has loaded");
     if (isLayerBacked != _flags.isLayerBacked && !_view && !_layer) {
@@ -921,7 +886,7 @@ static NSInteger incrementIfFound(NSInteger i) {
 - (BOOL)__hasParentWithVisibilityNotificationsDisabled {
     CALayer *layer = _layer;
     do {
-        ASDisplayNode *node = ASLayerToDisplayNode(layer);
+        ASDisplayNode *node = layer.asyncdisplaykit_node;
         if (node) {
             if (node->_flags.visibilityNotificationsDisabled) {
                 return YES;
@@ -1083,19 +1048,12 @@ static NSInteger incrementIfFound(NSInteger i) {
 - (void)displayDidFinish {
 }
 
-- (void)setNeedsDisplayAtScale:(CGFloat)contentsScale {
-    if (contentsScale != self.contentsScaleForDisplay) {
-        self.contentsScaleForDisplay = contentsScale;
-        [self setNeedsDisplay];
-    }
-}
-
-- (void)recursivelySetNeedsDisplayAtScale:(CGFloat)contentsScale {
-    [self setNeedsDisplayAtScale:contentsScale];
+- (void)recursivelySetNeedsDisplay {
+    [self setNeedsDisplay];
 
     ASDN::MutexLocker l(_propertyLock);
     for (ASDisplayNode *child in _subnodes) {
-        [child recursivelySetNeedsDisplayAtScale:contentsScale];
+        [child recursivelySetNeedsDisplay];
     }
 }
 
@@ -1218,30 +1176,6 @@ static NSInteger incrementIfFound(NSInteger i) {
     }
 }
 
-// This method has proved helpful in a few rare scenarios, similar to a category extension on UIView, but assumes knowledge of _ASDisplayView.
-// It's considered private API for now and its use should not be encouraged.
-- (ASDisplayNode *)_supernodeWithClass:(Class)supernodeClass {
-    ASDisplayNode *supernode = self.supernode;
-    while (supernode) {
-        if ([supernode isKindOfClass:supernodeClass])
-            return supernode;
-        supernode = supernode.supernode;
-    }
-
-    UIView *view = self.view.superview;
-    while (view) {
-        ASDisplayNode *viewNode = ((_ASDisplayView *)view).asyncdisplaykit_node;
-        if (viewNode) {
-            if ([viewNode isKindOfClass:supernodeClass])
-                return viewNode;
-        }
-
-        view = view.superview;
-    }
-
-    return nil;
-}
-
 - (void)recursiveSetPreventOrCancelDisplay:(BOOL)flag {
     _recursiveSetPreventOrCancelDisplay(self, nil, flag);
 }
@@ -1308,121 +1242,6 @@ static void _recursiveSetPreventOrCancelDisplay(ASDisplayNode *node, CALayer *la
 
     ASDN::MutexLocker l(_propertyLock);
     _flags.inWindow = inWindow;
-}
-
-+ (dispatch_queue_t)asyncSizingQueue {
-    static dispatch_queue_t asyncSizingQueue = NULL;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        asyncSizingQueue = dispatch_queue_create("com.facebook.AsyncDisplayKit.ASDisplayNode.asyncSizingQueue", DISPATCH_QUEUE_CONCURRENT);
-        // we use the highpri queue to prioritize UI rendering over other async operations
-        dispatch_set_target_queue(asyncSizingQueue, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0));
-    });
-
-    return asyncSizingQueue;
-}
-
-- (BOOL)_isMarkedForReplacement {
-    ASDN::MutexLocker l(_propertyLock);
-
-    return _replaceAsyncSentinel != nil;
-}
-
-- (ASSentinel *)_asyncReplaceSentinel {
-    ASDN::MutexLocker l(_propertyLock);
-
-    if (!_replaceAsyncSentinel) {
-        _replaceAsyncSentinel = [[ASSentinel alloc] init];
-    }
-    return _replaceAsyncSentinel;
-}
-
-// Calls completion with nil to indicated cancellation
-- (void)_enqueueAsyncSizingWithSentinel:(ASSentinel *)sentinel completion:(void (^)(ASDisplayNode *n))completion;
-{
-    int32_t sentinelValue = sentinel.value;
-
-    // This is what we're going to use for sizing. Hope you like it :D
-    CGRect bounds = self.bounds;
-
-    dispatch_async([[self class] asyncSizingQueue], ^{
-        // Check sentinel before, bail early
-        if (sentinel.value != sentinelValue)
-            return dispatch_async(dispatch_get_main_queue(), ^{
-                completion(nil);
-            });
-
-        [self measure:bounds.size];
-
-        // Check sentinel after, bail early
-        if (sentinel.value != sentinelValue)
-            return dispatch_async(dispatch_get_main_queue(), ^{
-                completion(nil);
-            });
-
-        // Success; not cancelled
-        dispatch_async(dispatch_get_main_queue(), ^{
-            completion(self);
-        });
-    });
-}
-
-@end
-
-@implementation ASDisplayNode (Debugging)
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wobjc-protocol-method-implementation"
-- (NSString *)description {
-    if (self.name) {
-        return [NSString stringWithFormat:@"<%@ %p name = %@>", self.class, self, self.name];
-    } else {
-        return [super description];
-    }
-}
-#pragma clang diagnostic pop
-
-- (NSString *)debugDescription {
-    NSString *notableTargetDesc = (_flags.isLayerBacked ? @" [layer]" : @" [view]");
-    if (_view && _viewClass) { // Nonstandard view is loaded
-        notableTargetDesc = [NSString stringWithFormat:@" [%@ : %p]", _view.class, _view];
-    } else if (_layer && _layerClass) { // Nonstandard layer is loaded
-        notableTargetDesc = [NSString stringWithFormat:@" [%@ : %p]", _layer.class, _layer];
-    } else if (_viewClass) { // Nonstandard view class unloaded
-        notableTargetDesc = [NSString stringWithFormat:@" [%@]", _viewClass];
-    } else if (_layerClass) { // Nonstandard layer class unloaded
-        notableTargetDesc = [NSString stringWithFormat:@" [%@]", _layerClass];
-    }
-    if (self.name) {
-        return [NSString stringWithFormat:@"<%@ %p name = %@%@>", self.class, self, self.name, notableTargetDesc];
-    } else {
-        return [NSString stringWithFormat:@"<%@ %p%@>", self.class, self, notableTargetDesc];
-    }
-}
-
-- (NSString *)descriptionForRecursiveDescription {
-    NSString *creationTypeString = nil;
-#if TIME_DISPLAYNODE_OPS
-    creationTypeString = [NSString stringWithFormat:@"cr8:%.2lfms dl:%.2lfms ap:%.2lfms ad:%.2lfms",
-                                                    1000 * _debugTimeToCreateView,
-                                                    1000 * _debugTimeForDidLoad,
-                                                    1000 * _debugTimeToApplyPendingState,
-                                                    1000 * _debugTimeToAddSubnodeViews];
-#endif
-
-    return [NSString stringWithFormat:@"<%@ alpha:%.2f isLayerBacked:%d %@>", self.description, self.alpha, self.isLayerBacked, creationTypeString];
-}
-
-- (NSString *)displayNodeRecursiveDescription {
-    return [self _recursiveDescriptionHelperWithIndent:@""];
-}
-
-- (NSString *)_recursiveDescriptionHelperWithIndent:(NSString *)indent {
-    NSMutableString *subtree = [[[indent stringByAppendingString:self.descriptionForRecursiveDescription] stringByAppendingString:@"\n"] mutableCopy];
-    for (ASDisplayNode *n in self.subnodes) {
-        [subtree appendString:[n _recursiveDescriptionHelperWithIndent:[indent stringByAppendingString:@" | "]]];
-    }
-    return subtree;
 }
 
 @end

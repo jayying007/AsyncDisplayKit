@@ -20,6 +20,8 @@ static const NSInteger kLitterSize = 30;
     NSArray *_kittenDataSource;
 }
 
+@property (nonatomic) ASDisplayNode *node;
+
 @end
 
 @implementation ViewController
@@ -29,6 +31,33 @@ static const NSInteger kLitterSize = 30;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+
+    //    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    //        ASDisplayNode *node4 = [[ASDisplayNode alloc] init];
+    //        self.node = [[ASDisplayNode alloc] init];
+    //        self.node.frame = CGRectMake(60, 60, 240, 240);
+    //        self.node.backgroundColor = UIColor.lightGrayColor;
+    //
+    //        ASDisplayNode *node2 = [[ASDisplayNode alloc] init];
+    //        node2.frame = CGRectMake(0, 0, 120, 120);
+    //        node2.backgroundColor = UIColor.redColor;
+    //        node2.layerBacked = YES;
+    //        [self.node addSubnode:node2];
+    //
+    //        ASDisplayNode *node3 = [[ASDisplayNode alloc] init];
+    //        node3.frame = CGRectMake(120, 0, 120, 120);
+    //        node3.backgroundColor = UIColor.blueColor;
+    //        node3.layerBacked = YES;
+    //        [self.node addSubnode:node3];
+    //
+    //        [node2 setNeedsLayout];
+    //
+    //        dispatch_async(dispatch_get_main_queue(), ^{
+    //            [self.view addSubview:self.node.view];
+    //        });
+    //    });
+    //
+    //    return;
 
     _tableView = [[ASTableView alloc] initWithFrame:CGRectZero style:UITableViewStylePlain];
     _tableView.separatorStyle = UITableViewCellSeparatorStyleNone; // KittenNode has its own separator
